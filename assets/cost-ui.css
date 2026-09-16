@@ -127,3 +127,14 @@
 }
 .ce-chip.err { background: #fee2e2; color: #b91c1c; }
 .ce-preview-more { font-size: 0.7rem; color: #94a3b8; margin-top: 6px; }
+
+/* ============ 意见反馈 ============ */
+.ce-modal-sm { width: 560px; }
+.ce-wechat-box {
+    margin-top: 12px; padding: 14px; background: #f0fdf4;
+    border: 1px solid #bbf7d0; border-radius: 14px; text-align: center;
+}
+.ce-wechat-title { font-size: 0.75rem; color: #15803d; margin-bottom: 8px; }
+.ce-wechat-id { font-size: 0.9rem; color: #0f172a; margin-bottom: 8px; }
+.ce-wechat-id b { color: #15803d; letter-spacing: 0.5px; }
+.ce-wechat-qr { max-width: 200px; width: 100%; border-radius: 10px; border: 1px solid #bbf7d0; }

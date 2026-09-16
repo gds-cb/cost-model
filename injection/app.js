@@ -886,11 +886,10 @@
         el('cancelMaterialBtn').onclick = closeMaterialModal;
         el('cancelSurfaceBtn').onclick = closeSurfaceModal;
 
-        // 反馈：不再假装有后端。本地留存 + 邮件/剪贴板通道
+        // 反馈：不再假装有后端。弹窗整理内容 → 用户通过 cost-config.js 配置的渠道发出
         el('feedbackBtn').onclick = function () {
-            UI.collectFeedback({
+            UI.openFeedbackDialog({
                 subjectPrefix: '[注塑件成本模型反馈]',
-                email: window.COST_TOOL_FEEDBACK_EMAIL || '',
                 context: UI.buildContext({
                     '页面': '注塑件成本模型',
                     '零件': val('partName', ''),

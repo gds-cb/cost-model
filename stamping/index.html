@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="../assets/cost-ui.css">
     <script src="../assets/cost-engine.js"></script>
     <script src="../assets/cost-db.js"></script>
+    <script src="../assets/cost-config.js"></script>
     <script src="../assets/cost-ui.js"></script>
     <style>
         * {
@@ -742,26 +743,7 @@
         </div>
     </div>
 
-    <!-- 反馈模态框（简化） -->
-    <div id="feedbackModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>意见反馈</h3><button class="outline" id="closeFeedbackModal">✕</button>
-            </div>
-            <div class="form-group"><label>内容</label><textarea id="feedbackContent" rows="3"></textarea></div>
-            <div style="display:flex;gap:12px;"><button class="outline" id="cancelFeedbackBtn">取消</button><button
-                    class="primary" id="submitFeedbackBtn">提交</button></div>
-        </div>
-    </div>
-    <div id="viewFeedbackModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>反馈列表</h3><button class="outline" id="closeViewModal">✕</button>
-            </div>
-            <div id="feedbackList"></div><button class="outline" id="exportFeedbackBtn">导出CSV</button><button
-                class="outline danger" id="clearAllFeedbackBtn">清空</button>
-        </div>
-    </div>
+    <!-- 意见反馈改用共享弹窗（见 assets/cost-ui.js），反馈渠道在 assets/cost-config.js 配置 -->
 
     <script src="app.js"></script>
 </body>

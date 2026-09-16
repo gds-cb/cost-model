@@ -147,38 +147,156 @@
         };
     }
 
-    /* ================= 邮件反馈（替代失效的本地反馈） ================= */
+    /* ================= 意见反馈 ================= */
     /**
-     * 生成本地反馈记录 + 复制到剪贴板 + 打开邮件客户端。
-     * 说明：纯前端无法真正"收集"反馈，所以既存本地也给出邮件通道，不再假装有后端。
+     * 读取 cost-config.js 里的渠道配置。
+     * 全部留空时，弹窗会自动降级为「只有复制按钮」。
      */
-    function collectFeedback(opts) {
+    function feedbackConfig() {
+        var c = (typeof window !== 'undefined' && window.COST_TOOL_CONFIG) || {};
+        return {
+            email: c.feedbackEmail || '',
+            formUrl: c.feedbackFormUrl || '',
+            formLabel: c.feedbackFormLabel || '在线表单',
+            wechat: c.feedbackWechat || '',
+            wechatQr: c.feedbackWechatQr || '',
+            authorName: c.authorName || ''
+        };
+    }
+
+    function hasFeedbackChannel(cfg) {
+        return !!(cfg.email || cfg.formUrl || cfg.wechat || cfg.wechatQr);
+    }
+
+    /**
+     * 打开意见反馈弹窗。
+     *
+     * 设计前提：本工具是纯前端应用、没有服务器，**无法自动收集反馈**。
+     * 所以这里做的是「帮用户把内容整理好，并给出能发出去的渠道」，
+     * 而不是假装提交成功（旧版把反馈写进用户自己的 localStorage，
+     * 作者永远收不到，那是自欺欺人）。
+     *
+     * @param {Object} opts { context: 环境信息字符串, subjectPrefix: 邮件主题前缀 }
+     */
+    function openFeedbackDialog(opts) {
         opts = opts || {};
-        var msg = prompt(opts.prompt || '请描述你的建议或遇到的问题：');
-        if (!msg) return;
+        var cfg = feedbackConfig();
+        var configured = hasFeedbackChannel(cfg);
+        var context = opts.context || buildContext({});
 
-        var context = opts.context ? '\n\n--- 环境信息 ---\n' + opts.context : '';
-        var full = msg + context;
-        var subject = encodeURIComponent((opts.subjectPrefix || '[成本工具反馈]') + ' ' + msg.slice(0, 30));
-        var body = encodeURIComponent(full);
+        var old = document.getElementById('ceFeedbackModal');
+        if (old) old.remove();
 
-        // 本地留存
-        try {
-            var list = DB.state('feedback') || [];
-            list.unshift({ time: new Date().toLocaleString(), content: msg, context: opts.context || '' });
-            DB.state('feedback', list.slice(0, 200));
-        } catch (e) { /* 忽略 */ }
+        var modal = document.createElement('div');
+        modal.id = 'ceFeedbackModal';
+        modal.className = 'ce-backdrop';
+        modal.innerHTML =
+            '<div class="ce-modal ce-modal-sm">'
+            + '  <div class="ce-modal-head">'
+            + '    <h3>✉️ 意见反馈</h3>'
+            + '    <button class="ce-btn outline small" data-ce="close">✕</button>'
+            + '  </div>'
+            + '  <div class="ce-modal-body">'
+            + (configured
+                ? '<p class="ce-modal-tip">这个工具是纯前端应用、<b>没有服务器</b>，所以无法自动提交。'
+                  + '请把下面的内容通过任一渠道发给作者' + (cfg.authorName ? '（' + E.escapeHtml(cfg.authorName) + '）' : '')
+                  + ' —— 你的反馈会直接决定下一步做什么改进。</p>'
+                : '<p class="ce-modal-tip">这个工具是纯前端应用、<b>没有服务器</b>，无法自动提交反馈；'
+                  + '<b>作者还没有配置接收渠道</b>。你可以先复制下面的内容，通过已知的方式联系作者。</p>')
+            + '    <textarea id="ceFeedbackText" class="ce-textarea" rows="7" spellcheck="false"></textarea>'
+            + '    <div class="ce-modal-actions" id="ceFeedbackActions"></div>'
+            + '    <div id="ceFeedbackExtra"></div>'
+            + '  </div>'
+            + '  <div class="ce-modal-foot">'
+            + '    <button class="ce-btn outline small" data-ce="history">📋 本机反馈记录</button>'
+            + '    <div><button class="ce-btn outline" data-ce="cancel">关闭</button></div>'
+            + '  </div>'
+            + '</div>';
+        document.body.appendChild(modal);
 
-        var copied = copyText(full);
-        if (opts.email) {
-            window.location.href = 'mailto:' + opts.email + '?subject=' + subject + '&body=' + body;
-            toast(copied ? '已复制反馈内容，并打开邮件客户端' : '已打开邮件客户端', 'success', 3200);
-        } else {
-            alert(copied
-                ? '反馈内容已复制到剪贴板，请粘贴发送给作者。\n\n（尚未配置收件邮箱，可在本页 cost-ui 配置 email 字段）'
-                : '请手动复制以下内容发送给作者：\n\n' + full);
+        var ta = modal.querySelector('#ceFeedbackText');
+        ta.value = '【我的建议 / 遇到的问题】\n\n\n\n'
+            + '──────────── 以下信息请保留，便于定位问题 ────────────\n'
+            + context;
+
+        var extra = modal.querySelector('#ceFeedbackExtra');
+
+        function close() { modal.remove(); }
+        modal.querySelector('[data-ce="close"]').onclick = close;
+        modal.querySelector('[data-ce="cancel"]').onclick = close;
+        modal.addEventListener('click', function (e) { if (e.target === modal) close(); });
+
+        modal.querySelector('[data-ce="history"]').onclick = viewFeedback;
+
+        // ---- 渠道按钮 ----
+        var actions = modal.querySelector('#ceFeedbackActions');
+
+        function addBtn(label, cls, fn) {
+            var b = document.createElement('button');
+            b.className = 'ce-btn ' + (cls || 'outline') + ' small';
+            b.textContent = label;
+            b.onclick = fn;
+            actions.appendChild(b);
+            return b;
+        }
+
+        addBtn('📋 复制内容', 'primary', function () {
+            var ok = copyText(ta.value);
+            rememberFeedback(ta.value);
+            toast(ok ? '已复制到剪贴板，粘贴发送即可' : '复制失败，请手动选中文本复制',
+                ok ? 'success' : 'error', 3200);
+        });
+
+        if (cfg.formUrl) {
+            addBtn('📝 打开' + cfg.formLabel, 'outline', function () {
+                copyText(ta.value);
+                rememberFeedback(ta.value);
+                window.open(cfg.formUrl, '_blank', 'noopener');
+                toast('表单已在新窗口打开，内容已复制到剪贴板', 'success', 3600);
+            });
+        }
+
+        if (cfg.wechat || cfg.wechatQr) {
+            addBtn('💬 加微信发送', 'outline', function () {
+                var ok = copyText(ta.value);
+                rememberFeedback(ta.value);
+                extra.innerHTML = '<div class="ce-wechat-box">'
+                    + '<div class="ce-wechat-title">内容已复制' + (ok ? '' : '（复制失败，请手动选择文本）') + '，加微信后粘贴发送：</div>'
+                    + (cfg.wechat ? '<div class="ce-wechat-id">微信号：<b>' + E.escapeHtml(cfg.wechat) + '</b></div>' : '')
+                    + (cfg.wechatQr ? '<img class="ce-wechat-qr" src="' + E.escapeHtml(cfg.wechatQr) + '" alt="微信二维码">' : '')
+                    + '</div>';
+            });
+        }
+
+        if (cfg.email) {
+            addBtn('✉️ 用邮件发送', 'outline', function () {
+                rememberFeedback(ta.value);
+                var subject = encodeURIComponent(opts.subjectPrefix || '[汽车成本工具反馈]');
+                window.location.href = 'mailto:' + cfg.email + '?subject=' + subject
+                    + '&body=' + encodeURIComponent(ta.value);
+            });
+        }
+
+        // 兜底提示
+        if (!configured) {
+            extra.innerHTML = '<div class="ce-diag-item info" style="margin-top:10px;">'
+                + '<span class="ce-diag-icon">' + icon('info', 14) + '</span>'
+                + '<span>部署者可在 <code>assets/cost-config.js</code> 里填写反馈表单链接、微信号或邮箱，'
+                + '填好后这里会自动出现对应按钮。</span></div>';
         }
     }
+
+    /** 本地留一份，方便「本机反馈记录」回看（不是提交，只是本地台账） */
+    function rememberFeedback(text) {
+        try {
+            var list = DB.state('feedback') || [];
+            list.unshift({ time: new Date().toLocaleString(), content: text });
+            DB.state('feedback', list.slice(0, 200));
+        } catch (e) { /* 忽略 */ }
+    }
+
+    /** 兼容旧调用 */
+    function collectFeedback(opts) { openFeedbackDialog(opts); }
 
     function copyText(text) {
         try {
@@ -194,12 +312,18 @@
         } catch (e) { return false; }
     }
 
-    /** 显示本地已收集的反馈（仅本人可见） */
+    /**
+     * 查看「本机反馈台账」—— 注意这只是本地留存，**不是已提交的记录**。
+     * 作者不会收到任何东西，除非用户主动通过渠道发出去。
+     */
     function viewFeedback() {
         var list = DB.state('feedback') || [];
-        if (!list.length) { alert('本机暂无反馈记录。'); return; }
-        var text = list.map(function (f) { return '【' + f.time + '】\n' + f.content; }).join('\n\n');
-        if (confirm('本机共 ' + list.length + ' 条反馈记录。\n\n点击「确定」复制全部内容，点击「取消」关闭。')) copyText(text);
+        if (!list.length) { toast('本机暂无反馈记录', 'error'); return; }
+        var text = list.map(function (f) { return '【' + f.time + '】\n' + f.content; })
+            .join('\n\n────────────────────\n\n');
+        var ok = copyText(text);
+        toast('本机共 ' + list.length + ' 条留存记录，' + (ok ? '已复制到剪贴板' : '复制失败，请手动查看'),
+            ok ? 'success' : 'error', 3600);
     }
 
     function buildContext(info) {
@@ -408,7 +532,7 @@
 
     /* ================= 公共 API ================= */
     root.CostUI = {
-        VERSION: '1.1.0',
+        VERSION: '1.2.0',
         icon: icon,
         toast: toast,
         renderDiagnostics: renderDiagnostics,
@@ -417,7 +541,9 @@
         mountBackupButtons: mountBackupButtons,
         mountPresetPicker: mountPresetPicker,
         openPriceImport: openPriceImport,
+        openFeedbackDialog: openFeedbackDialog,
         collectFeedback: collectFeedback,
+        feedbackConfig: feedbackConfig,
         viewFeedback: viewFeedback,
         copyText: copyText,
         buildContext: buildContext

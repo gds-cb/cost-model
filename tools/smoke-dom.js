@@ -211,6 +211,41 @@ async function testInjection(server) {
     ok(/测试来源/.test(matAfter.source || ''), '数据来源被记录：' + matAfter.source);
     ok(!!matAfter.updatedAt, '更新日期被记录：' + matAfter.updatedAt);
 
+    /* ---------- 意见反馈 ---------- */
+    doc.getElementById('feedbackBtn').click();
+    await sleep(50);
+    let fb = doc.getElementById('ceFeedbackModal');
+    ok(!!fb, '意见反馈弹窗已打开');
+    ok(!!fb.querySelector('#ceFeedbackText'), '弹窗内有内容输入框');
+    ok(/复制内容/.test(fb.textContent), '弹窗内有「复制内容」按钮');
+    ok(/引擎版本/.test(fb.querySelector('#ceFeedbackText').value), '内容框预填了环境信息（便于定位问题）');
+    ok(/没有服务器/.test(fb.textContent), '明确告知没有服务器，不假装已提交');
+    ok(!!fb.querySelector('[data-ce="history"]'), '弹窗内有「本机反馈记录」入口');
+    ok(/cost-config\.js/.test(fb.textContent), '未配置渠道时提示部署者去哪里配置');
+    fb.querySelector('[data-ce="close"]').click();
+    await sleep(30);
+    ok(!doc.getElementById('ceFeedbackModal'), '弹窗可正常关闭');
+
+    // 配置渠道后应出现对应按钮
+    win.COST_TOOL_CONFIG.feedbackWechat = 'test_wx_id';
+    win.COST_TOOL_CONFIG.feedbackFormUrl = 'https://example.com/form';
+    win.COST_TOOL_CONFIG.feedbackEmail = 'a@b.com';
+    doc.getElementById('feedbackBtn').click();
+    await sleep(50);
+    fb = doc.getElementById('ceFeedbackModal');
+    ok(/加微信发送/.test(fb.textContent), '配置微信号后出现「加微信发送」按钮');
+    ok(/打开在线表单/.test(fb.textContent), '配置表单链接后出现「打开在线表单」按钮');
+    ok(/用邮件发送/.test(fb.textContent), '配置邮箱后出现「用邮件发送」按钮');
+    ok(!/cost-config\.js/.test(fb.textContent), '已配置渠道时不再显示配置提示');
+
+    // 「加微信」应展开微信号（不跳转、不丢内容）
+    fb.querySelectorAll('#ceFeedbackActions button')[2].click();
+    await sleep(40);
+    ok(/test_wx_id/.test(fb.querySelector('#ceFeedbackExtra').textContent), '点「加微信」后展开微信号');
+
+    fb.querySelector('[data-ce="close"]').click();
+    await sleep(30);
+
     dom.window.close();
 }
 
@@ -388,6 +423,22 @@ async function testStamping(server) {
     const matAfter = win.CostDB.table('materials').all().find(m => m.code === 'DC01');
     near(matAfter.unitPrice, 7.5, 1e-6, '参数库中 DC01 单价已更新为 7.5');
     ok(/测试来源/.test(matAfter.source || ''), '数据来源被记录：' + matAfter.source);
+
+    /* ---------- 意见反馈（此前冲压件仍是「假提交」，本轮统一） ---------- */
+    doc.getElementById('feedbackBtn').click();
+    await sleep(50);
+    const fb = doc.getElementById('ceFeedbackModal');
+    ok(!!fb, '冲压件意见反馈弹窗已打开（改用共享弹窗）');
+    ok(/没有服务器/.test(fb.textContent), '冲压件也明确告知没有服务器');
+    ok(/引擎版本/.test(fb.querySelector('#ceFeedbackText').value), '内容框预填了环境信息');
+    ok(/总成/.test(fb.querySelector('#ceFeedbackText').value), '环境信息里带上了当前总成名');
+    fb.querySelector('[data-ce="close"]').click();
+    await sleep(30);
+    ok(!doc.getElementById('ceFeedbackModal'), '弹窗可正常关闭');
+
+    // 旧的本地假反馈入口应当已移除
+    ok(!doc.getElementById('feedbackModal'), '旧的「提交后存本地」假反馈弹窗已移除');
+    ok(!doc.getElementById('viewFeedbackModal'), '旧的反馈列表弹窗已移除');
 
     dom.window.close();
 }

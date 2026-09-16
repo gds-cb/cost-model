@@ -11,7 +11,6 @@
         let weldRelations = [];
         let currentEditingNodeId = null;
         let historyList = [];
-        let feedbackList = [];
         let lastStampingSheet = null;
 
         const MAT_TABLE = DB.table('materials');
@@ -50,7 +49,6 @@
             bomTree = DB.state('bomTree') || [];
             weldRelations = DB.state('weldRelations') || [];
             historyList = DB.state('history') || [];
-            feedbackList = DB.state('feedback') || [];
 
             const s = DB.settings('stamping').get();
             const setV = (id, v) => { const el = document.getElementById(id); if (el && v !== undefined && v !== null) el.value = v; };
@@ -840,29 +838,22 @@
             });
         }
 
-        // 反馈相关
-        function renderFeedbackList() {
-            let container = document.getElementById('feedbackList');
-            if (!container) return;
-            if (feedbackList.length === 0) { container.innerHTML = '<div style="padding:20px;text-align:center;">暂无反馈</div>'; return; }
-            let html = '';
-            feedbackList.forEach(f => {
-                html += `<div><strong>${f.time}</strong><br>${escapeHtml(f.content)}</div><hr>`;
+        // 意见反馈：改用共享弹窗（assets/cost-ui.js），渠道在 assets/cost-config.js 配置。
+        //
+        // 修复：旧实现把反馈写进用户自己的 localStorage，作者永远收不到 ——
+        // 却让用户以为「已提交」。现在明确告知没有服务器，并给出真实可用的发送渠道。
+        function openFeedback() {
+            UI.openFeedbackDialog({
+                subjectPrefix: '[冲压件成本模型反馈]',
+                context: UI.buildContext({
+                    '页面': '冲压件成本模型',
+                    '总成': document.getElementById('assemblyName').value || '',
+                    '年产量': document.getElementById('annualQty').value || '',
+                    '零件数': (function count(nodes) {
+                        return (nodes || []).reduce(function (s, n) { return s + 1 + count(n.children); }, 0);
+                    })(bomTree)
+                })
             });
-            container.innerHTML = html;
-        }
-        function addFeedback(content) {
-            if (!content.trim()) return;
-            feedbackList.unshift({ id: Date.now(), content: content, time: new Date().toLocaleString() });
-            DB.state('feedback', feedbackList.slice(0, 200));
-            renderFeedbackList();
-            showToast("感谢反馈");
-        }
-        function exportFeedbackCSV() {
-            if (!feedbackList.length) { showToast('暂无反馈记录', true); return; }
-            const rows = [["时间", "内容"]];
-            feedbackList.forEach(f => rows.push([f.time, f.content]));
-            E.exportCsv('反馈记录_' + E.timestamp() + '.csv', rows);
         }
 
         // ========== 初始化 ==========
@@ -986,21 +977,9 @@
                     document.getElementById('newEqSpm').value = '';
                 } else alert("请填写有效正数");
             };
-            // 反馈
-            document.getElementById('feedbackBtn').onclick = () => document.getElementById('feedbackModal').style.display = 'flex';
-            document.getElementById('viewFeedbackBtn').onclick = () => { renderFeedbackList(); document.getElementById('viewFeedbackModal').style.display = 'flex'; };
-            document.getElementById('closeFeedbackModal').onclick = () => document.getElementById('feedbackModal').style.display = 'none';
-            document.getElementById('cancelFeedbackBtn').onclick = () => document.getElementById('feedbackModal').style.display = 'none';
-            document.getElementById('submitFeedbackBtn').onclick = () => {
-                let content = document.getElementById('feedbackContent').value.trim();
-                if (!content) { alert("请输入内容"); return; }
-                addFeedback(content);
-                document.getElementById('feedbackModal').style.display = 'none';
-                document.getElementById('feedbackContent').value = '';
-            };
-            document.getElementById('closeViewModal').onclick = () => document.getElementById('viewFeedbackModal').style.display = 'none';
-            document.getElementById('clearAllFeedbackBtn').onclick = () => { feedbackList = []; saveAll(); renderFeedbackList(); showToast("已清空"); };
-            document.getElementById('exportFeedbackBtn').onclick = exportFeedbackCSV;
+            // 意见反馈（共享弹窗）
+            document.getElementById('feedbackBtn').onclick = openFeedback;
+            document.getElementById('viewFeedbackBtn').onclick = UI.viewFeedback;
             window.onclick = (e) => { if (e.target.classList.contains('modal')) e.target.style.display = 'none'; };
             document.getElementById('collapseHeader')?.addEventListener('click', () => document.getElementById('collapseContent')?.classList.toggle('show'));
             document.getElementById('historyHeader')?.addEventListener('click', () => document.getElementById('historyContent')?.classList.toggle('show'));
