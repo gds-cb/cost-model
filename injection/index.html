@@ -3,9 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>汽车注塑件成本模型 · 主机厂配套专业版</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <title>汽车注塑件成本模型 · 专业版</title>
+    <!-- 已移除 CDN 依赖：可离线 / 可内网运行，数据不出本机 -->
+    <link rel="stylesheet" href="../assets/cost-ui.css">
+    <script src="../assets/cost-engine.js"></script>
+    <script src="../assets/cost-db.js"></script>
+    <script src="../assets/cost-ui.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { background: #f0f2f5; font-family: 'Inter', system-ui, sans-serif; padding: 20px; }
@@ -62,17 +65,18 @@
 <div class="container">
     <div class="header">
         <div class="title">
-            <h1><i class="ti ti-factory"></i> 注塑件成本模型 · 主机厂配套专业版</h1>
-            <p>双模式重量计算 | 净重输入/几何估算 | 模具支付可配置 | 多物流模式</p>
+            <h1>🏭 注塑件成本模型 · 专业版</h1>
+            <p>供应商报价 / 主机厂核价 / 研发估算 · 双模式重量计算 · 模具支付可配置 · 多物流模式</p>
         </div>
         <div class="header-actions">
-            <button class="outline" id="viewFeedbackBtn"><i class="ti ti-message-circle"></i> 查看反馈</button>
-            <button class="feedback-btn" id="feedbackBtn"><i class="ti ti-mail"></i> 意见反馈</button>
+            <button class="outline" id="exportExcelBtn">📊 导出Excel</button>
+            <button class="outline" id="viewFeedbackBtn">📋 本机反馈</button>
+            <button class="feedback-btn" id="feedbackBtn">✉️ 意见反馈</button>
         </div>
     </div>
     <div class="dashboard">
         <div class="input-panel">
-            <h3><i class="ti ti-settings"></i> 零件参数</h3>
+            <h3>⚙️ 零件参数</h3>
             <div class="row-2">
                 <div><label>零件名称</label><input type="text" id="partName" value="仪表板骨架"></div>
                 <div><label>生产基地</label><select id="region"><option>华东</option><option>华南</option><option>华北</option></select></div>
@@ -257,16 +261,29 @@
                 <div><label>EDI对接费(元/月)</label><input type="number" id="ediFee" value="0"></div>
             </div>
             
-            <div class="toolbar" style="display: flex; gap: 12px; margin-top: 24px;">
-                <button class="primary" id="calcBtn"><i class="ti ti-calculator"></i> 开始测算</button>
-                <button class="outline" id="resetBtn"><i class="ti ti-refresh"></i> 重置</button>
+            <div class="section-title">📈 费率与税费（可配置，不再硬编码）</div>
+            <div id="presetPicker"></div>
+            <div class="row-2">
+                <div><label>管理费率 (%)</label><input type="number" id="managementRate" value="12" step="0.5"></div>
+                <div><label>利润率 (%)</label><input type="number" id="profitRate" value="10" step="0.5"></div>
+                <div><label>增值税率 (%)</label><input type="number" id="taxRate" value="13" step="0.5"></div>
+                <div><label>废料回收价 (元/kg)</label><input type="number" id="scrapPrice" value="0" step="0.1"></div>
             </div>
+
+            <div class="toolbar" style="display: flex; gap: 12px; margin-top: 24px; flex-wrap: wrap;">
+                <button class="primary" id="calcBtn">🧮 开始测算</button>
+                <button class="outline" id="resetBtn">🔄 重置</button>
+                <button class="outline" id="resetSettingsBtn">↩️ 恢复默认费率</button>
+            </div>
+            <div id="backupButtons"></div>
+            <div class="info-tip">💾 数据保存在本机浏览器（不上传任何服务器）。换电脑请用上方「导出备份」并导入。</div>
         </div>
 
         <div class="result-panel">
-            <h3><i class="ti ti-chart-bar"></i> 成本构成</h3>
+            <h3>📊 成本构成</h3>
             <div id="costDetails"></div>
-            <canvas id="costChart" width="300" height="150" style="max-height: 180px;"></canvas>
+            <div id="costChart"></div>
+            <div id="diagnostics"></div>
             <div id="techDetails" class="badge-info"></div>
             <div id="weightDetail" class="badge-info weight-highlight"></div>
             <div id="logisticsDetail" class="badge-info logistics-highlight"></div>
@@ -281,20 +298,23 @@
         <div class="data-panel">
             <div>
                 <div class="data-card-header">
-                    <h4><i class="ti ti-package"></i> 材料价格库</h4>
-                    <button class="outline small" id="openMaterialModalBtn">+ 新增</button>
+                    <h4>📦 材料价格库</h4>
+                    <div style="display:flex;gap:6px;">
+                        <button class="outline small" id="importPriceBtn">📥 批量导入价</button>
+                        <button class="outline small" id="openMaterialModalBtn">+ 新增</button>
+                    </div>
                 </div>
                 <div id="materialTablePreview"></div>
             </div>
             <div>
                 <div class="data-card-header">
-                    <h4><i class="ti ti-brush"></i> 表面处理库</h4>
+                    <h4>🎨 表面处理库</h4>
                     <button class="outline small" id="openSurfaceModalBtn">+ 新增</button>
                 </div>
                 <div id="surfaceTablePreview"></div>
             </div>
             <div>
-                <h4><i class="ti ti-tools"></i> 模具参数速查</h4>
+                <h4>🛠️ 模具参数速查</h4>
                 <div style="font-size: 12px; background:#f8fafc; padding:12px; border-radius:16px;">
                     型腔单价(中等): 100 元/cm²<br>
                     滑块成本: 4000元/个<br>
@@ -361,571 +381,6 @@
     </div>
 </div>
 
-<script>
-    // ==================== 全局数据 ====================
-    let materialsData = [ 
-        { id: 'm1', MaterialCode: "PP+EPDM-T20", Density: 1.05, UnitPrice: 8.5 }, 
-        { id: 'm2', MaterialCode: "ABS 757", Density: 1.05, UnitPrice: 11.5 },
-        { id: 'm3', MaterialCode: "PC/ABS", Density: 1.14, UnitPrice: 18.0 },
-        { id: 'm4', MaterialCode: "PA66+GF30", Density: 1.36, UnitPrice: 22.0 }
-    ];
-    let surfaceData = [ 
-        { id: 's1', ProcessName: "钢琴漆", UnitPrice: 1.25, ThicknessFactor: 1.2 }, 
-        { id: 's2', ProcessName: "普通喷漆", UnitPrice: 0.35, ThicknessFactor: 1.0 },
-        { id: 's3', ProcessName: "皮纹", UnitPrice: 0.80, ThicknessFactor: 1.1 },
-        { id: 's4', ProcessName: "高光", UnitPrice: 1.50, ThicknessFactor: 1.0 }
-    ];
-    let feedbackList = [];
-    const equipmentDB = [ 
-        { tonnage: 850, maxForce: 723, hourlyRate: 180 }, 
-        { tonnage: 1300, maxForce: 1105, hourlyRate: 250 },
-        { tonnage: 2000, maxForce: 1800, hourlyRate: 350 },
-        { tonnage: 2800, maxForce: 2600, hourlyRate: 450 }
-    ];
-    let chartInstance = null;
-    let currentMaterialId = null;
-    let currentSurfaceId = null;
-    let currentPartWeightG = 0;
-
-    // ==================== 辅助函数 ====================
-    function generateId() {
-        return Date.now().toString(36) + Math.random().toString(36).substr(2);
-    }
-    
-    function loadData() {
-        let m = localStorage.getItem('injection_materials'); 
-        if(m) materialsData = JSON.parse(m);
-        let s = localStorage.getItem('injection_surface'); 
-        if(s) surfaceData = JSON.parse(s);
-        let f = localStorage.getItem('injection_feedback'); 
-        if(f) feedbackList = JSON.parse(f);
-        refreshSelects();
-        refreshPreviews();
-        calculate();
-    }
-    
-    function saveMaterials() { 
-        localStorage.setItem('injection_materials', JSON.stringify(materialsData)); 
-        refreshSelects();
-        refreshPreviews();
-        calculate();
-    }
-    
-    function saveSurface() { 
-        localStorage.setItem('injection_surface', JSON.stringify(surfaceData)); 
-        refreshSelects();
-        refreshPreviews();
-        calculate();
-    }
-    
-    function refreshSelects() {
-        let matSel = document.getElementById('materialSelect');
-        if(matSel && materialsData.length > 0) { 
-            let currentVal = matSel.value;
-            matSel.innerHTML = ''; 
-            materialsData.forEach(m => matSel.add(new Option(m.MaterialCode, m.MaterialCode)));
-            if(currentVal && materialsData.some(m => m.MaterialCode === currentVal)) {
-                matSel.value = currentVal;
-            }
-        }
-        let surfSel = document.getElementById('surfaceProcess');
-        if(surfSel) { 
-            let currentVal = surfSel.value;
-            surfSel.innerHTML = '<option value="">无</option>'; 
-            surfaceData.forEach(s => surfSel.add(new Option(s.ProcessName, s.ProcessName)));
-            if(currentVal && surfaceData.some(s => s.ProcessName === currentVal)) {
-                surfSel.value = currentVal;
-            }
-        }
-    }
-    
-    function refreshPreviews() {
-        // 材料表格 - 使用 data-id 属性直接标记按钮
-        let matPreview = document.getElementById('materialTablePreview');
-        if(matPreview) {
-            if(materialsData.length === 0) {
-                matPreview.innerHTML = '<div style="color:#9ca3af; text-align:center; padding:20px;">暂无数据，点击"新增"添加</div>';
-            } else {
-                matPreview.innerHTML = '<table class="table-mini">' +
-                    '<thead><tr><th>材料</th><th>密度</th><th>价格(元/kg)</th><th style="width:80px">操作</th></tr></thead>' +
-                    '<tbody>' +
-                    materialsData.map(m => `
-                        <tr>
-                            <td>${escapeHtml(m.MaterialCode)}</td>
-                            <td>${m.Density}</td>
-                            <td>${m.UnitPrice}</td>
-                            <td>
-                                <button class="action-btn edit-btn" data-type="material" data-id="${m.id}" title="编辑">✏️</button>
-                                <button class="action-btn delete-btn" data-type="material" data-id="${m.id}" title="删除">🗑️</button>
-                            </td>
-                        </tr>
-                    `).join('') +
-                    '</tbody><td>';
-            }
-        }
-        
-        // 表面处理表格
-        let surfPreview = document.getElementById('surfaceTablePreview');
-        if(surfPreview) {
-            if(surfaceData.length === 0) {
-                surfPreview.innerHTML = '<div style="color:#9ca3af; text-align:center; padding:20px;">暂无数据，点击"新增"添加</div>';
-            } else {
-                surfPreview.innerHTML = '<table class="table-mini">' +
-                    '<thead><tr><th>工艺</th><th>单价(元/dm²)</th><th>系数</th><th style="width:80px">操作</th></tr></thead>' +
-                    '<tbody>' +
-                    surfaceData.map(s => `
-                        <tr>
-                            <td>${escapeHtml(s.ProcessName)}</td>
-                            <td>${s.UnitPrice}</td>
-                            <td>${s.ThicknessFactor}</td>
-                            <td>
-                                <button class="action-btn edit-btn" data-type="surface" data-id="${s.id}" title="编辑">✏️</button>
-                                <button class="action-btn delete-btn" data-type="surface" data-id="${s.id}" title="删除">🗑️</button>
-                            </td>
-                        </tr>
-                    `).join('') +
-                    '</tbody></td>';
-            }
-        }
-    }
-    
-    function escapeHtml(text) {
-        if(!text) return '';
-        return text.replace(/[&<>]/g, function(c) {
-            if(c === '&') return '&amp;';
-            if(c === '<') return '&lt;';
-            if(c === '>') return '&gt;';
-            return c;
-        });
-    }
-    
-    // ==================== 重量计算 ====================
-    function calculatePartWeight() {
-        let method = document.getElementById('weightMethod').value;
-        let runnerWeight = parseFloat(document.getElementById('runnerWeight').value) || 0;
-        let cavity = parseInt(document.getElementById('cavityCount').value) || 1;
-        let runnerPerPart = runnerWeight / cavity;
-        
-        if(method === 'manual') {
-            let netWeight = parseFloat(document.getElementById('netWeight').value) || 0;
-            return { partWeight: netWeight, totalWeight: netWeight + runnerPerPart, method: 'manual' };
-        } else {
-            let len = parseFloat(document.getElementById('length').value) || 0;
-            let wid = parseFloat(document.getElementById('width').value) || 0;
-            let thick = parseFloat(document.getElementById('thickness').value) || 2.8;
-            let selectedMatCode = document.getElementById('materialSelect').value;
-            let material = materialsData.find(m => m.MaterialCode === selectedMatCode);
-            let density = material ? material.Density : 1.05;
-            let geometryType = document.getElementById('partGeometry').value;
-            let geometryFactor = { 'solid': 0.85, 'box': 0.60, 'frame': 0.40, 'ribbed': 0.70 }[geometryType] || 0.60;
-            let uniformity = parseFloat(document.getElementById('thicknessUniformity').value) || 1.0;
-            let baseVolume = len * wid * thick;
-            let correctedVolumeCm3 = (baseVolume / 1000) * geometryFactor * uniformity;
-            let partWeight = correctedVolumeCm3 * density;
-            return { partWeight: partWeight, totalWeight: partWeight + runnerPerPart, method: 'estimate' };
-        }
-    }
-    
-    // ==================== 物流成本 ====================
-    function calculateLogisticsCost(partWeightG, annualQty) {
-        let model = document.getElementById('logisticsModel').value;
-        let distance = parseFloat(document.getElementById('logisticsDistance').value) || 500;
-        let region = document.getElementById('region').value;
-        let freightRateMap = {华东:0.0008, 华南:0.0009, 华北:0.0007};
-        let freightRate = freightRateMap[region] || 0.0008;
-        
-        switch(model) {
-            case 'general': {
-                let billingMode = document.getElementById('billingMode').value;
-                let volStandard = document.getElementById('volumetricStandard').value;
-                let volFactor = volStandard === 'custom' ? (parseFloat(document.getElementById('volumetricFactor').value) || 6000) : parseFloat(volStandard);
-                let len = parseFloat(document.getElementById('length').value) || 0;
-                let wid = parseFloat(document.getElementById('width').value) || 0;
-                let hei = parseFloat(document.getElementById('height').value) || 0;
-                let actualWt = partWeightG / 1000;
-                let volWt = (len/10) * (wid/10) * (hei/10) / volFactor;
-                let billingWt = billingMode === 'actual' ? actualWt : (billingMode === 'volumetric' ? volWt : Math.max(actualWt, volWt));
-                return freightRate * distance * billingWt;
-            }
-            case 'direct': {
-                let truckVal = document.getElementById('truckType').value;
-                let parts = truckVal.split('|');
-                let truckCost = parseFloat(parts[1]);
-                let truckCapacity = parseFloat(parts[2]);
-                let partWeightKg = partWeightG / 1000;
-                let partsPerTruck = Math.floor(truckCapacity / partWeightKg);
-                if(partsPerTruck < 1) partsPerTruck = 1;
-                let tripsPerYear = Math.ceil(annualQty / partsPerTruck);
-                document.getElementById('directTripsPerYear').value = tripsPerYear;
-                document.getElementById('directPartsPerTruck').value = partsPerTruck;
-                return (tripsPerYear * truckCost) / annualQty;
-            }
-            case 'milkrun': {
-                let supplierCount = parseFloat(document.getElementById('milkrunSupplierCount').value) || 1;
-                let totalCostPerTrip = parseFloat(document.getElementById('milkrunTotalCost').value) || 2000;
-                let partsPerTrip = parseFloat(document.getElementById('milkrunPartsPerTrip').value) || 1000;
-                let tripsPerYear = Math.ceil(annualQty / partsPerTrip);
-                document.getElementById('milkrunTripsPerYear').value = tripsPerYear;
-                return ((totalCostPerTrip / supplierCount) * tripsPerYear) / annualQty;
-            }
-            case 'rdc': {
-                let inboundFee = parseFloat(document.getElementById('rdcInboundFee').value) || 0;
-                let lineFeedFee = parseFloat(document.getElementById('rdcLineFeedFee').value) || 0;
-                let storageFee = parseFloat(document.getElementById('rdcStorageFee').value) || 0;
-                let inventoryDays = parseFloat(document.getElementById('rdcInventoryDays').value) || 7;
-                return inboundFee + lineFeedFee + storageFee * (inventoryDays / 30);
-            }
-            default: return 0;
-        }
-    }
-    
-    function calculatePackagingCost(annualQty) {
-        let packagingType = document.getElementById('packagingType').value;
-        let emptyReturnRate = parseFloat(document.getElementById('emptyReturn').value) || 0;
-        let ediFeeMonthly = parseFloat(document.getElementById('ediFee').value) || 0;
-        let deliveryReq = document.getElementById('deliveryRequirement').value;
-        let packagingAmortize = { 'simple': 0.05, 'eu': 0.15, 'custom': parseFloat(document.getElementById('packagingAmortize').value) || 0.5 }[packagingType] || 0;
-        let packagingCost = packagingAmortize * (1 + emptyReturnRate);
-        let ediPerPart = (ediFeeMonthly * 12) / annualQty;
-        let jitFactor = deliveryReq === 'jit' ? 1.05 : (deliveryReq === 'sequencing' ? 1.12 : 1.0);
-        window._packagingInfo = { packagingCost: packagingCost + ediPerPart, jitFactor: jitFactor };
-        return packagingCost + ediPerPart;
-    }
-    
-    // ==================== 核心计算 ====================
-    function calculate() {
-        try {
-            let len = parseFloat(document.getElementById('length').value) || 0;
-            let wid = parseFloat(document.getElementById('width').value) || 0;
-            let thick = parseFloat(document.getElementById('thickness').value) || 2.8;
-            let cavity = parseInt(document.getElementById('cavityCount').value) || 1;
-            let totalQty = parseInt(document.getElementById('lifecycleQty').value) || 100000;
-            let wasteRate = parseFloat(document.getElementById('wasteRate').value) || 0;
-            let region = document.getElementById('region').value;
-            
-            let selectedMatCode = document.getElementById('materialSelect').value;
-            let material = materialsData.find(m => m.MaterialCode === selectedMatCode);
-            if(!material && materialsData.length > 0) material = materialsData[0];
-            if(!material) return;
-            
-            let selectedSurf = document.getElementById('surfaceProcess').value;
-            let surface = surfaceData.find(s => s.ProcessName === selectedSurf);
-            
-            let moldBaseType = document.getElementById('moldBaseType').value;
-            let cavityComplex = document.getElementById('cavityComplex').value;
-            let slideCount = parseInt(document.getElementById('slideMedium').value) || 0;
-            let lifterCount = parseInt(document.getElementById('lifterMedium').value) || 0;
-            let hotRunnerPoints = parseInt(document.getElementById('hotRunnerPoints').value) || 0;
-            let hotRunnerBrand = document.getElementById('hotRunnerBrand').value;
-            
-            let moldPayment = document.getElementById('moldPayment').value;
-            let supplierRatio = moldPayment === 'full_automaker' ? 0 : (moldPayment === 'partial' ? (parseFloat(document.getElementById('partialRatio').value) || 0) / 100 : 1);
-            
-            let weightResult = calculatePartWeight();
-            let partWeightG = weightResult.partWeight;
-            let totalWeightWithRunner = weightResult.totalWeight;
-            currentPartWeightG = partWeightG;
-            
-            let materialCost = (totalWeightWithRunner / 1000) * material.UnitPrice * (1 + wasteRate/100);
-            let projAreaCm2 = len * wid / 100;
-            let requiredTon = projAreaCm2 * 0.5 * cavity * 1.2;
-            let equipment = equipmentDB.find(e => requiredTon <= e.maxForce) || equipmentDB[equipmentDB.length-1];
-            let cycle = thick <= 2.5 ? 40 : (thick <= 3.5 ? 60 : 80);
-            let laborRate = {华东:35, 华南:38, 华北:32}[region] || 35;
-            let mfgCost = (equipment.hourlyRate + laborRate) / (3600/cycle * cavity);
-            
-            let moldAreaCm2 = ((len + 150) * (wid + 150)) / 100;
-            let moldBaseFactor = {标准模架:1.0, 精密模架:1.4, 细水口模架:1.3, 简化型模架:0.8}[moldBaseType] || 1.0;
-            let moldBaseCost = moldAreaCm2 * 60 * moldBaseFactor;
-            let cavityComplexFactor = {简单:0.7, 中等:1.0, 复杂:1.5, 极复杂:2.2}[cavityComplex] || 1.0;
-            let cavityCost = projAreaCm2 * 100 * cavityComplexFactor * cavity;
-            let slideCost = slideCount * 4000;
-            let lifterCost = lifterCount * 3500;
-            let hotRunnerCost = hotRunnerPoints * 2800 * ({国产:1.0, 合资:1.6, 进口:2.2}[hotRunnerBrand] || 1.0);
-            let totalMoldPrice = (moldBaseCost + cavityCost + slideCost + lifterCost + hotRunnerCost) * 1.07;
-            let moldLife = parseInt(document.getElementById('lifeRequirement').value) || 100000;
-            totalMoldPrice = totalMoldPrice * Math.pow(moldLife / 100000, 0.7);
-            let perPartMold = (totalMoldPrice * supplierRatio) / totalQty;
-            
-            let surfaceCost = surface ? (projAreaCm2 / 100) * surface.UnitPrice * surface.ThicknessFactor : 0;
-            let logisticsCost = calculateLogisticsCost(partWeightG, totalQty);
-            let packagingCost = calculatePackagingCost(totalQty);
-            let jitFactor = window._packagingInfo?.jitFactor || 1.0;
-            
-            let directCost = materialCost + mfgCost + perPartMold + surfaceCost + logisticsCost + packagingCost;
-            let managementFee = directCost * 0.12;
-            let profit = (directCost + managementFee) * 0.10;
-            let totalCost = (directCost + managementFee + profit) * jitFactor;
-            let quote = totalCost * 1.13;
-            
-            document.getElementById('totalCostVal').innerHTML = totalCost.toFixed(2) + ' 元';
-            document.getElementById('quotePriceVal').innerHTML = quote.toFixed(2) + ' 元';
-            
-            let methodName = weightResult.method === 'manual' ? '精确输入' : '几何估算';
-            document.getElementById('weightDetail').innerHTML = `⚖️ 重量: ${methodName} | 零件重: ${partWeightG.toFixed(1)}g | 含料把: ${totalWeightWithRunner.toFixed(1)}g | 废品率: ${wasteRate.toFixed(1)}% | 材料: ${material.UnitPrice}元/kg`;
-            
-            let logMode = {general:'通用零担', direct:'供应商直送', milkrun:'循环取货', rdc:'RDC模式'}[document.getElementById('logisticsModel').value];
-            document.getElementById('logisticsDetail').innerHTML = `🚚 物流模式: ${logMode} | 单件物流费: ${logisticsCost.toFixed(3)}元`;
-            document.getElementById('packagingDetail').innerHTML = `📦 包装: ${document.getElementById('packagingType').options[document.getElementById('packagingType').selectedIndex]?.text || ''} | 合计: ${packagingCost.toFixed(3)}元/件`;
-            document.getElementById('equipAdvice').innerHTML = `推荐设备: ${equipment.tonnage}吨 (需求: ${Math.round(requiredTon)}吨) | 周期: ${cycle}秒`;
-            document.getElementById('moldCostDetail').innerHTML = `模具总价: ${Math.round(totalMoldPrice).toLocaleString()}元 | 单件分摊: ${perPartMold.toFixed(3)}元`;
-            document.getElementById('techDetails').innerHTML = `📐 投影面积: ${projAreaCm2.toFixed(1)}cm² | 模穴数: ${cavity}`;
-            
-            let costItems = [
-                {name:'材料费', val:materialCost}, {name:'制造成本', val:mfgCost}, {name:'模具分摊', val:perPartMold},
-                {name:'表面处理', val:surfaceCost}, {name:'物流费', val:logisticsCost}, {name:'包装及EDI', val:packagingCost},
-                {name:'管理费', val:managementFee * jitFactor}, {name:'利润', val:profit * jitFactor}
-            ];
-            document.getElementById('costDetails').innerHTML = costItems.map(i => `<div class="cost-card"><span>${i.name}</span><span>${i.val.toFixed(2)}元</span></div>`).join('');
-            
-            if(chartInstance) chartInstance.destroy();
-            chartInstance = new Chart(document.getElementById('costChart'), { 
-                type: 'pie', data: { labels: costItems.map(i=>i.name), datasets: [{ data: costItems.map(i=>i.val), backgroundColor: ['#3b82f6','#10b981','#f59e0b','#ef4444','#8b5cf6','#ec489a','#06b6d4','#f97316'] }] },
-                options: { responsive: true, maintainAspectRatio: true }
-            });
-        } catch(e) { console.error(e); alert("计算失败：" + e.message); }
-    }
-    
-    // ==================== 材料编辑 ====================
-    function openMaterialEditModal(id) {
-        let material = materialsData.find(m => m.id === id);
-        if(material) {
-            currentMaterialId = id;
-            document.getElementById('materialCode').value = material.MaterialCode;
-            document.getElementById('materialDensity').value = material.Density;
-            document.getElementById('materialPrice').value = material.UnitPrice;
-            document.getElementById('materialModalTitle').innerText = '编辑材料';
-            document.getElementById('deleteMaterialBtn').style.display = 'flex';
-            document.getElementById('materialModal').style.display = 'flex';
-        }
-    }
-    
-    function deleteMaterialById(id) {
-        if(confirm('确定删除该材料吗？')) {
-            let index = materialsData.findIndex(m => m.id === id);
-            if(index !== -1) {
-                materialsData.splice(index, 1);
-                if(materialsData.length === 0) {
-                    materialsData.push({ id: generateId(), MaterialCode: "PP+EPDM-T20", Density: 1.05, UnitPrice: 8.5 });
-                }
-                saveMaterials();
-                closeMaterialModal();
-            }
-        }
-    }
-    
-    function saveMaterial() {
-        let code = document.getElementById('materialCode').value.trim();
-        let density = parseFloat(document.getElementById('materialDensity').value);
-        let price = parseFloat(document.getElementById('materialPrice').value);
-        if(!code) { alert('请填写材料代码'); return; }
-        if(isNaN(density) || density <= 0) { alert('请填写有效密度'); return; }
-        if(isNaN(price) || price <= 0) { alert('请填写有效单价'); return; }
-        
-        if(currentMaterialId) {
-            let index = materialsData.findIndex(m => m.id === currentMaterialId);
-            if(index !== -1) {
-                materialsData[index].MaterialCode = code;
-                materialsData[index].Density = density;
-                materialsData[index].UnitPrice = price;
-            }
-        } else {
-            materialsData.push({ id: generateId(), MaterialCode: code, Density: density, UnitPrice: price });
-        }
-        saveMaterials();
-        closeMaterialModal();
-    }
-    
-    function openNewMaterialModal() {
-        currentMaterialId = null;
-        document.getElementById('materialCode').value = '';
-        document.getElementById('materialDensity').value = '';
-        document.getElementById('materialPrice').value = '';
-        document.getElementById('materialModalTitle').innerText = '新增材料';
-        document.getElementById('deleteMaterialBtn').style.display = 'none';
-        document.getElementById('materialModal').style.display = 'flex';
-    }
-    
-    function closeMaterialModal() {
-        document.getElementById('materialModal').style.display = 'none';
-        currentMaterialId = null;
-    }
-    
-    // ==================== 表面处理编辑 ====================
-    function openSurfaceEditModal(id) {
-        let surface = surfaceData.find(s => s.id === id);
-        if(surface) {
-            currentSurfaceId = id;
-            document.getElementById('surfaceName').value = surface.ProcessName;
-            document.getElementById('surfacePrice').value = surface.UnitPrice;
-            document.getElementById('surfaceFactor').value = surface.ThicknessFactor;
-            document.getElementById('surfaceModalTitle').innerText = '编辑表面处理';
-            document.getElementById('deleteSurfaceBtn').style.display = 'flex';
-            document.getElementById('surfaceModal').style.display = 'flex';
-        }
-    }
-    
-    function deleteSurfaceById(id) {
-        if(confirm('确定删除该表面处理工艺吗？')) {
-            let index = surfaceData.findIndex(s => s.id === id);
-            if(index !== -1) {
-                surfaceData.splice(index, 1);
-                if(surfaceData.length === 0) {
-                    surfaceData.push({ id: generateId(), ProcessName: "钢琴漆", UnitPrice: 1.25, ThicknessFactor: 1.2 });
-                }
-                saveSurface();
-                closeSurfaceModal();
-            }
-        }
-    }
-    
-    function saveSurfaceItem() {
-        let name = document.getElementById('surfaceName').value.trim();
-        let price = parseFloat(document.getElementById('surfacePrice').value);
-        let factor = parseFloat(document.getElementById('surfaceFactor').value);
-        if(!name) { alert('请填写工艺名称'); return; }
-        if(isNaN(price) || price < 0) { alert('请填写有效单价'); return; }
-        if(isNaN(factor) || factor <= 0) { alert('请填写有效厚度系数'); return; }
-        
-        if(currentSurfaceId) {
-            let index = surfaceData.findIndex(s => s.id === currentSurfaceId);
-            if(index !== -1) {
-                surfaceData[index].ProcessName = name;
-                surfaceData[index].UnitPrice = price;
-                surfaceData[index].ThicknessFactor = factor;
-            }
-        } else {
-            surfaceData.push({ id: generateId(), ProcessName: name, UnitPrice: price, ThicknessFactor: factor });
-        }
-        saveSurface();
-        closeSurfaceModal();
-    }
-    
-    function openNewSurfaceModal() {
-        currentSurfaceId = null;
-        document.getElementById('surfaceName').value = '';
-        document.getElementById('surfacePrice').value = '';
-        document.getElementById('surfaceFactor').value = '';
-        document.getElementById('surfaceModalTitle').innerText = '新增表面处理';
-        document.getElementById('deleteSurfaceBtn').style.display = 'none';
-        document.getElementById('surfaceModal').style.display = 'flex';
-    }
-    
-    function closeSurfaceModal() {
-        document.getElementById('surfaceModal').style.display = 'none';
-        currentSurfaceId = null;
-    }
-    
-    // ==================== 全局事件委托（兼容所有浏览器） ====================
-    function setupGlobalDelegation() {
-        // 监听整个文档的点击事件
-        document.body.addEventListener('click', function(e) {
-            let target = e.target;
-            
-            // 查找按钮元素（可能是按钮本身或其子元素）
-            let btn = target.closest ? target.closest('.action-btn') : null;
-            if(!btn && target.classList && target.classList.contains('action-btn')) {
-                btn = target;
-            }
-            if(!btn && target.parentElement && target.parentElement.classList && target.parentElement.classList.contains('action-btn')) {
-                btn = target.parentElement;
-            }
-            
-            if(btn && btn.classList && btn.classList.contains('action-btn')) {
-                e.preventDefault();
-                e.stopPropagation();
-                
-                let type = btn.getAttribute('data-type');
-                let id = btn.getAttribute('data-id');
-                
-                if(type === 'material') {
-                    if(btn.classList.contains('edit-btn')) {
-                        openMaterialEditModal(id);
-                    } else if(btn.classList.contains('delete-btn')) {
-                        deleteMaterialById(id);
-                    }
-                } else if(type === 'surface') {
-                    if(btn.classList.contains('edit-btn')) {
-                        openSurfaceEditModal(id);
-                    } else if(btn.classList.contains('delete-btn')) {
-                        deleteSurfaceById(id);
-                    }
-                }
-            }
-        });
-    }
-    
-    // ==================== 事件绑定 ====================
-    function bindEvents() {
-        document.getElementById('calcBtn').onclick = calculate;
-        document.getElementById('resetBtn').onclick = () => { if(confirm('重置将清除所有数据？')) { localStorage.clear(); location.reload(); } };
-        document.getElementById('weightMethod').onchange = () => {
-            let method = document.getElementById('weightMethod').value;
-            document.getElementById('netWeightGroup').style.display = method === 'manual' ? 'block' : 'none';
-            document.getElementById('estimateGroup').style.display = method === 'estimate' ? 'block' : 'none';
-            calculate();
-        };
-        document.getElementById('moldPayment').onchange = () => {
-            document.getElementById('partialRatioGroup').style.display = document.getElementById('moldPayment').value === 'partial' ? 'block' : 'none';
-            calculate();
-        };
-        document.getElementById('logisticsModel').onchange = () => {
-            let model = document.getElementById('logisticsModel').value;
-            document.getElementById('generalGroup').style.display = model === 'general' ? 'block' : 'none';
-            document.getElementById('directGroup').style.display = model === 'direct' ? 'block' : 'none';
-            document.getElementById('milkrunGroup').style.display = model === 'milkrun' ? 'block' : 'none';
-            document.getElementById('rdcGroup').style.display = model === 'rdc' ? 'block' : 'none';
-            calculate();
-        };
-        document.getElementById('packagingType').onchange = () => {
-            document.getElementById('packagingCostGroup').style.display = document.getElementById('packagingType').value === 'custom' ? 'block' : 'none';
-            calculate();
-        };
-        document.getElementById('volumetricStandard').onchange = () => {
-            document.getElementById('customVolFactorDiv').style.display = document.getElementById('volumetricStandard').value === 'custom' ? 'block' : 'none';
-            calculate();
-        };
-        
-        let autoIds = ['length','width','height','thickness','cavityCount','lifecycleQty','partialRatio','netWeight','wasteRate',
-            'materialSelect','region','surfaceProcess','surfaceGrade','moldBaseType','cavityComplex','slideMedium','lifterMedium',
-            'hotRunnerPoints','hotRunnerBrand','logisticsDistance','billingMode','lifeRequirement','truckType','milkrunSupplierCount',
-            'milkrunTotalCost','milkrunPartsPerTrip','rdcInboundFee','rdcLineFeedFee','rdcStorageFee','rdcInventoryDays',
-            'packagingAmortize','emptyReturn','deliveryRequirement','ediFee','volumetricFactor','runnerWeight','partGeometry','thicknessUniformity'];
-        autoIds.forEach(id => { let el = document.getElementById(id); if(el) { el.addEventListener('input', calculate); if(el.tagName === 'SELECT') el.addEventListener('change', calculate); } });
-        
-        // 模态框按钮
-        document.getElementById('openMaterialModalBtn').onclick = openNewMaterialModal;
-        document.getElementById('openSurfaceModalBtn').onclick = openNewSurfaceModal;
-        document.getElementById('saveMaterialBtn').onclick = saveMaterial;
-        document.getElementById('saveSurfaceBtn').onclick = saveSurfaceItem;
-        document.getElementById('deleteMaterialBtn').onclick = () => { if(currentMaterialId) deleteMaterialById(currentMaterialId); };
-        document.getElementById('deleteSurfaceBtn').onclick = () => { if(currentSurfaceId) deleteSurfaceById(currentSurfaceId); };
-        document.getElementById('closeMaterialModalBtn').onclick = closeMaterialModal;
-        document.getElementById('closeSurfaceModalBtn').onclick = closeSurfaceModal;
-        document.getElementById('cancelMaterialBtn').onclick = closeMaterialModal;
-        document.getElementById('cancelSurfaceBtn').onclick = closeSurfaceModal;
-        
-        // 反馈
-        document.getElementById('feedbackBtn').onclick = () => { let msg = prompt('请输入意见：'); if(msg) { feedbackList.push({ time: new Date().toLocaleString(), content: msg }); localStorage.setItem('injection_feedback', JSON.stringify(feedbackList)); alert('感谢反馈！'); } };
-        document.getElementById('viewFeedbackBtn').onclick = () => { alert(feedbackList.length ? feedbackList.map(f => `${f.time}\n${f.content}`).join('\n\n') : '暂无反馈'); };
-        
-        // 点击模态框背景关闭
-        window.onclick = (event) => { if(event.target === document.getElementById('materialModal')) closeMaterialModal(); if(event.target === document.getElementById('surfaceModal')) closeSurfaceModal(); };
-    }
-    
-    function init() {
-        loadData();
-        bindEvents();
-        setupGlobalDelegation();  // 关键：使用全局事件委托
-        // 触发初始状态
-        document.getElementById('weightMethod').dispatchEvent(new Event('change'));
-        document.getElementById('moldPayment').dispatchEvent(new Event('change'));
-        document.getElementById('logisticsModel').dispatchEvent(new Event('change'));
-        document.getElementById('packagingType').dispatchEvent(new Event('change'));
-        document.getElementById('volumetricStandard').dispatchEvent(new Event('change'));
-    }
-    
-    init();
-</script>
+<script src="app.js"></script>
 </body>
 </html>

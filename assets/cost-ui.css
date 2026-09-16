@@ -1,0 +1,129 @@
+/*!
+ * cost-ui.css —— 成本工具箱共享组件样式 V1.0.0
+ * 供 cost-engine.js 生成的图表/诊断/工具栏使用，替代 CDN 依赖。
+ */
+
+/* ============ 通用 ============ */
+.ce-hidden { display: none !important; }
+.ce-empty { color: #9ca3af; text-align: center; padding: 24px 12px; font-size: 0.8rem; }
+
+/* ============ 环形图 ============ */
+.ce-pie-wrap { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+.ce-pie { width: 200px; height: 200px; flex: 0 0 auto; }
+.ce-legend { flex: 1 1 180px; min-width: 170px; }
+.ce-legend-row { display: flex; align-items: center; gap: 8px; padding: 5px 0; font-size: 0.76rem; border-bottom: 1px dashed #eef2f7; }
+.ce-legend-row:last-child { border-bottom: none; }
+.ce-dot { width: 10px; height: 10px; border-radius: 3px; flex: 0 0 auto; }
+.ce-legend-name { flex: 1 1 auto; color: #475569; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ce-legend-val { font-weight: 600; color: #0f172a; font-variant-numeric: tabular-nums; }
+.ce-legend-pct { color: #94a3b8; width: 46px; text-align: right; font-variant-numeric: tabular-nums; }
+
+/* ============ 条形图（敏感度 / 对比） ============ */
+.ce-bar-row { display: flex; align-items: center; gap: 10px; padding: 6px 0; font-size: 0.76rem; }
+.ce-bar-name { flex: 0 0 110px; color: #475569; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ce-bar-track { flex: 1 1 auto; height: 14px; background: #f1f5f9; border-radius: 8px; overflow: hidden; }
+.ce-bar-fill { display: block; height: 100%; border-radius: 8px; transition: width 0.35s ease; }
+.ce-bar-val { flex: 0 0 120px; text-align: right; font-variant-numeric: tabular-nums; color: #0f172a; font-weight: 600; }
+.ce-bar-val em { color: #94a3b8; font-weight: 400; font-style: normal; font-size: 0.7rem; }
+
+/* ============ 诊断信息（输入校验 / 计算告警） ============ */
+.ce-diagnostics { margin-top: 10px; display: flex; flex-direction: column; gap: 6px; }
+.ce-diag-item { display: flex; gap: 8px; align-items: flex-start; font-size: 0.75rem; padding: 8px 12px; border-radius: 12px; line-height: 1.45; }
+.ce-diag-item.error { background: #fef2f2; border: 1px solid #fecaca; color: #b91c1c; }
+.ce-diag-item.warn { background: #fffbeb; border: 1px solid #fde68a; color: #92400e; }
+.ce-diag-item.info { background: #eff6ff; border: 1px solid #bfdbfe; color: #1d4ed8; }
+.ce-diag-icon { flex: 0 0 auto; }
+
+/* ============ 工具栏 / 按钮 ============ */
+.ce-toolbar { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 16px; }
+.ce-btn {
+    background: #1e293b; border: none; color: #fff; padding: 8px 16px; border-radius: 40px;
+    font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;
+    font-size: 0.8rem; font-family: inherit; transition: all 0.18s;
+}
+.ce-btn:hover { opacity: 0.88; }
+.ce-btn.primary { background: #2563eb; }
+.ce-btn.primary:hover { background: #1d4ed8; }
+.ce-btn.outline { background: transparent; border: 1px solid #cbd5e1; color: #1e293b; }
+.ce-btn.outline:hover { background: #f8fafc; border-color: #94a3b8; }
+.ce-btn.success { background: #059669; }
+.ce-btn.small { padding: 4px 12px; font-size: 0.7rem; }
+
+/* ============ Toast ============ */
+#ceToastHost { position: fixed; bottom: 24px; right: 24px; z-index: 2000; display: flex; flex-direction: column; gap: 8px; align-items: flex-end; }
+.ce-toast {
+    background: #1e293b; color: #fff; padding: 12px 22px; border-radius: 40px;
+    font-size: 0.8rem; box-shadow: 0 8px 20px rgba(15, 23, 42, 0.18);
+    animation: ceToastIn 0.25s ease; max-width: 380px;
+}
+.ce-toast.error { background: #b91c1c; }
+.ce-toast.success { background: #047857; }
+@keyframes ceToastIn { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+
+/* ============ 模式徽标（为三模式预留） ============ */
+.ce-mode-badge {
+    display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 20px;
+    font-size: 0.7rem; font-weight: 600; letter-spacing: 0.3px;
+}
+.ce-mode-badge.quote { background: #dcfce7; color: #15803d; }
+.ce-mode-badge.audit { background: #e0e7ff; color: #4338ca; }
+.ce-mode-badge.estimate { background: #fef3c7; color: #b45309; }
+
+/* ============ 内联图标（替代 tabler 图标字体） ============ */
+.ce-i { display: inline-block; width: 1em; height: 1em; vertical-align: -0.125em; fill: currentColor; flex: 0 0 auto; }
+
+/* ============ 费率预设选择器 ============ */
+#cePresetValues { color: #3b82f6; }
+
+/* ============ 弹窗（批量导入等） ============ */
+.ce-backdrop {
+    position: fixed; inset: 0; background: rgba(15, 23, 42, 0.55);
+    display: flex; align-items: center; justify-content: center; z-index: 1500; padding: 20px;
+}
+.ce-modal {
+    background: #fff; border-radius: 20px; width: 720px; max-width: 100%;
+    max-height: 88vh; display: flex; flex-direction: column;
+    box-shadow: 0 24px 60px rgba(15, 23, 42, 0.28); overflow: hidden;
+}
+.ce-modal-head {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 16px 22px; border-bottom: 1px solid #eef2f7;
+}
+.ce-modal-head h3 { margin: 0; font-size: 1.05rem; color: #0f172a; }
+.ce-modal-body { padding: 16px 22px; overflow-y: auto; flex: 1 1 auto; }
+.ce-modal-foot {
+    display: flex; justify-content: space-between; align-items: center; gap: 12px;
+    padding: 14px 22px; border-top: 1px solid #eef2f7; background: #fafcff; flex-wrap: wrap;
+}
+.ce-modal-tip { font-size: 0.76rem; color: #64748b; line-height: 1.7; margin-bottom: 10px; }
+.ce-modal-tip code { background: #f1f5f9; padding: 1px 5px; border-radius: 5px; font-size: 0.72rem; }
+.ce-modal-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+.ce-textarea {
+    width: 100%; padding: 12px 14px; border-radius: 14px; border: 1px solid #cbd5e1;
+    font-family: Consolas, 'Courier New', monospace; font-size: 0.78rem; line-height: 1.6;
+    resize: vertical; background: #fcfdff;
+}
+.ce-textarea:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); }
+.ce-check { font-size: 0.75rem; color: #475569; display: inline-flex; align-items: center; gap: 6px; cursor: pointer; }
+
+/* ============ 导入预览 ============ */
+.ce-preview { margin-top: 14px; }
+.ce-preview-stats { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+.ce-pill { padding: 3px 11px; border-radius: 20px; font-size: 0.7rem; font-weight: 600; }
+.ce-pill.ok { background: #dcfce7; color: #15803d; }
+.ce-pill.warn { background: #fef3c7; color: #b45309; }
+.ce-pill.err { background: #fee2e2; color: #b91c1c; }
+.ce-pill.muted { background: #f1f5f9; color: #64748b; }
+.ce-preview-title { font-size: 0.75rem; font-weight: 600; color: #334155; margin: 14px 0 6px; }
+.ce-preview-table { width: 100%; border-collapse: collapse; font-size: 0.72rem; }
+.ce-preview-table th, .ce-preview-table td { padding: 6px 8px; border-bottom: 1px solid #eef2f7; text-align: left; }
+.ce-preview-table th { background: #f8fafc; color: #64748b; font-weight: 600; position: sticky; top: 0; }
+.ce-preview-table td.up { color: #b91c1c; font-weight: 600; }
+.ce-preview-table td.down { color: #15803d; font-weight: 600; }
+.ce-preview-table td.same { color: #94a3b8; }
+.ce-preview-list { display: flex; flex-wrap: wrap; gap: 6px; }
+.ce-chip {
+    background: #f1f5f9; color: #475569; padding: 3px 10px; border-radius: 14px; font-size: 0.7rem;
+}
+.ce-chip.err { background: #fee2e2; color: #b91c1c; }
+.ce-preview-more { font-size: 0.7rem; color: #94a3b8; margin-top: 6px; }

@@ -4,9 +4,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>冲压件成本模型 V4.4 · 汽车成本计算工具箱</title>
-    <link rel="stylesheet" href="https://cdn.elemecdn.com/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <title>冲压件成本模型 · 专业版</title>
+    <!-- 已移除 CDN 依赖：可离线 / 可内网运行，数据不出本机 -->
+    <link rel="stylesheet" href="../assets/cost-ui.css">
+    <script src="../assets/cost-engine.js"></script>
+    <script src="../assets/cost-db.js"></script>
+    <script src="../assets/cost-ui.js"></script>
     <style>
         * {
             margin: 0;
@@ -177,6 +180,11 @@
 
         button.danger {
             background: #dc2626;
+        }
+
+        /* 修复：此前 .feedback-btn 有 class 但没有样式定义，按钮不显示为紫色 */
+        button.feedback-btn {
+            background: #8b5cf6;
         }
 
         .toolbar {
@@ -488,19 +496,19 @@
     <div class="container">
         <div class="header">
             <div class="title">
-                <h1><i class="ti ti-factory"></i> 冲压件成本模型 V4.4</h1>
-                <p>BOM零件级工序 | 下料尺寸精确成本 | 焊接关系编辑器 | 板材/设备/模具价格库可维护</p>
+                <h1>⚙️ 冲压件成本模型 · 专业版</h1>
+                <p>BOM 零件级工序 | 净重/下料毛重双口径 | 焊接关系编辑器 | 板材/设备/模具价格库可维护</p>
             </div>
             <div class="header-actions">
-                <button class="outline" id="viewFeedbackBtn"><i class="ti ti-message-circle"></i> 反馈</button>
-                <button class="feedback-btn" id="feedbackBtn"><i class="ti ti-mail"></i> 意见</button>
-                <button class="outline" id="exportExcelBtn"><i class="ti ti-file-spreadsheet"></i> 导出Excel</button>
+                <button class="outline" id="viewFeedbackBtn">📋 本机反馈</button>
+                <button class="feedback-btn" id="feedbackBtn">✉️ 意见反馈</button>
+                <button class="outline" id="exportExcelBtn">📊 导出Excel</button>
             </div>
         </div>
         <div class="dashboard">
             <!-- 左侧输入区 -->
             <div class="input-panel">
-                <h3><i class="ti ti-settings"></i> 总成参数</h3>
+                <h3>⚙️ 总成参数</h3>
                 <div class="row-2">
                     <div class="form-group"><label>总成名称</label><input type="text" id="assemblyName" value="前门内板总成">
                     </div>
@@ -529,6 +537,9 @@
                             <option value="deduct">冲减材料成本</option>
                             <option value="ignore">不核算</option>
                         </select></div>
+                    <div class="form-group"><label>下料利用率 (%)</label><input type="number" id="blankUtilization" value="75" step="1">
+                        <div class="info-tip">净重 = 下料毛重 × 利用率；废料 = 毛重 − 净重</div>
+                    </div>
                 </div>
                 <div class="row-2">
                     <div class="form-group"><label>物流距离 (km)</label><input type="number" id="logisticsDistance"
@@ -552,14 +563,27 @@
                             id="partialRatio" value="50"></div>
                 </div>
 
-                <div class="toolbar"><button class="primary" id="calcBtn">开始测算</button><button class="outline"
-                        id="resetBtn">重置</button></div>
+                <div class="section-title">📈 费率与税费（可配置，不再硬编码）</div>
+                <div id="presetPicker"></div>
+                <div class="row-2">
+                    <div class="form-group"><label>管理费率 (%)</label><input type="number" id="mgmtRate" value="12" step="0.5"></div>
+                    <div class="form-group"><label>利润率 (%)</label><input type="number" id="profitRate" value="10" step="0.5"></div>
+                    <div class="form-group"><label>增值税率 (%)</label><input type="number" id="taxRate" value="13" step="0.5"></div>
+                </div>
+
+                <div class="toolbar">
+                    <button class="primary" id="calcBtn">🧮 开始测算</button>
+                    <button class="outline" id="resetBtn">🔄 重置</button>
+                </div>
+                <div id="backupButtons"></div>
+                <div class="info-tip">💾 数据保存在本机浏览器（不上传服务器）。换电脑请用上方「导出备份」并导入。</div>
             </div>
 
             <!-- 结果区 -->
             <div class="result-panel">
                 <h3>成本构成</h3>
-                <canvas id="costChart" width="300" height="150" style="max-height:150px; margin-bottom:16px;"></canvas>
+                <div id="costChart"></div>
+                <div id="diagnostics"></div>
                 <div id="costDetails"></div>
                 <div id="materialBreakdown" class="badge-info" style="margin-top:8px;"></div>
                 <div class="collapse-panel">
@@ -577,7 +601,11 @@
                 <div class="collapse-panel">
                     <div class="collapse-header" id="historyHeader">📋 历史记录</div>
                     <div class="collapse-content" id="historyContent">
-                        <div id="historyList"></div><button class="outline small" id="clearHistoryBtn">清空</button>
+                        <div id="historyList"></div>
+                        <div style="display:flex;gap:8px;margin-top:8px;">
+                            <button class="outline small" id="saveHistoryBtn">💾 保存本次测算</button>
+                            <button class="outline small" id="clearHistoryBtn">清空</button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -585,8 +613,10 @@
             <!-- 右侧维护区 -->
             <div class="data-panel">
                 <div>
-                    <h4><i class="ti ti-package"></i> 板材价格库 <button class="outline" id="openMaterialModalBtn"
-                            style="float:right;">维护</button></h4>
+                    <h4>📦 板材价格库 <span style="float:right;display:inline-flex;gap:6px;">
+                            <button class="outline" id="importPriceBtn">📥 批量导入价</button>
+                            <button class="outline" id="openMaterialModalBtn">维护</button>
+                        </span></h4>
                     <div style="max-height:200px; overflow:auto;">
                         <table class="table-mini">
                             <tbody id="materialPreviewBody"></tbody>
@@ -594,7 +624,7 @@
                     </div>
                 </div>
                 <div>
-                    <h4><i class="ti ti-device-desktop"></i> 设备费率库 <button class="outline" id="openEquipmentModalBtn"
+                    <h4>🖥️ 设备费率库 <button class="outline" id="openEquipmentModalBtn"
                             style="float:right;">维护</button></h4>
                     <div style="max-height:180px;">
                         <table class="table-mini">
@@ -610,14 +640,14 @@
                     </div>
                 </div>
                 <div>
-                    <h4><i class="ti ti-database"></i> 📚 模具价格库</h4>
+                    <h4>📚 模具价格库</h4>
                     <div class="form-group"><label>模具单价 (元/kg)</label><input type="number" id="diePricePerKg" value="25"
                             step="1">
                         <div class="info-tip">模具总成本 = 模具总重(kg) × 单价(元/kg)</div>
                     </div>
                 </div>
                 <div>
-                    <h4><i class="ti ti-database"></i> 📚 案例库匹配</h4>
+                    <h4>📚 案例库匹配</h4>
                     <div id="caseMatchPanel" style="max-height:320px; overflow-y:auto;"></div><button
                         class="outline small" id="refreshCaseMatchBtn">🔄 重新匹配</button>
                     <div class="info-tip">基于顶层零件尺寸/材料匹配案例，点击应用工序配置。</div>
@@ -733,670 +763,7 @@
         </div>
     </div>
 
-    <script>
-        // ==================== 数据定义 ====================
-        let stampingMaterialsData = [
-            { id: "q235", MaterialCode: "Q235A", Type: "热轧", Spec: "1.5-6.0mm", Thickness: 3.0, Density: 7.85, UnitPrice: 3.5 },
-            { id: "dc01", MaterialCode: "DC01", Type: "冷轧", Spec: "0.5-3.0mm", Thickness: 1.0, Density: 7.85, UnitPrice: 5.8 },
-            { id: "hc340", MaterialCode: "HC340/590DP", Type: "高强钢", Spec: "0.8-2.5mm", Thickness: 1.2, Density: 7.85, UnitPrice: 7.5 },
-            { id: "spcc", MaterialCode: "SPCC", Type: "冷轧", Spec: "0.5-2.0mm", Thickness: 1.0, Density: 7.85, UnitPrice: 5.6 },
-            { id: "saph440", MaterialCode: "SAPH440", Type: "热轧", Spec: "2.0-6.0mm", Thickness: 3.2, Density: 7.85, UnitPrice: 5.2 },
-            { id: "510l", MaterialCode: "510L", Type: "热轧", Spec: "2.0-8.0mm", Thickness: 4.0, Density: 7.85, UnitPrice: 5.0 },
-            { id: "qste500", MaterialCode: "QSTE500TM", Type: "高强钢", Spec: "1.5-20mm", Thickness: 3.0, Density: 7.85, UnitPrice: 6.2 },
-            { id: "dc03", MaterialCode: "DC03", Type: "冷轧", Spec: "0.5-2.5mm", Thickness: 0.8, Density: 7.85, UnitPrice: 6.5 }
-        ];
-        let equipmentData = [
-            { id: "eq1", tonnage: 25, hourlyRate: 45, spm: 90 }, { id: "eq2", tonnage: 45, hourlyRate: 50, spm: 80 },
-            { id: "eq3", tonnage: 80, hourlyRate: 55, spm: 70 }, { id: "eq4", tonnage: 110, hourlyRate: 60, spm: 65 },
-            { id: "eq5", tonnage: 160, hourlyRate: 70, spm: 60 }, { id: "eq6", tonnage: 200, hourlyRate: 80, spm: 55 },
-            { id: "eq7", tonnage: 315, hourlyRate: 100, spm: 50 }, { id: "eq8", tonnage: 400, hourlyRate: 120, spm: 45 },
-            { id: "eq9", tonnage: 630, hourlyRate: 150, spm: 40 }
-        ];
-        let caseLibrary = [
-            {
-                id: "c1", name: "前门内板", category: "车身件", material: "DC01", thickness: 1.0, length: 1200, width: 800,
-                processes: [{ name: "落料", tonnage: 400, dieWeight: 1500, strokes: 1 }, { name: "冲孔", tonnage: 250, dieWeight: 800, strokes: 2 }, { name: "拉伸", tonnage: 630, dieWeight: 2000, strokes: 1 }, { name: "切边", tonnage: 400, dieWeight: 1200, strokes: 1 }]
-            },
-            {
-                id: "c2", name: "后纵梁", category: "商用车底盘", material: "Q235A", thickness: 2.5, length: 1500, width: 200,
-                processes: [{ name: "落料", tonnage: 630, dieWeight: 1800, strokes: 1 }, { name: "拉伸", tonnage: 1000, dieWeight: 3500, strokes: 1 }, { name: "冲孔", tonnage: 400, dieWeight: 1000, strokes: 2 }]
-            },
-            {
-                id: "c3", name: "发动机盖外板", category: "车身件", material: "DC03", thickness: 0.8, length: 1400, width: 1000,
-                processes: [{ name: "落料", tonnage: 500, dieWeight: 2000, strokes: 1 }, { name: "拉伸", tonnage: 800, dieWeight: 2800, strokes: 1 }, { name: "切边", tonnage: 500, dieWeight: 1600, strokes: 1 }, { name: "翻边", tonnage: 400, dieWeight: 1300, strokes: 1 }]
-            },
-            {
-                id: "c4", name: "车架横梁", category: "商用车底盘", material: "510L", thickness: 3.0, length: 1800, width: 300,
-                processes: [{ name: "落料", tonnage: 800, dieWeight: 2200, strokes: 1 }, { name: "冲孔", tonnage: 630, dieWeight: 1400, strokes: 4 }, { name: "弯曲", tonnage: 630, dieWeight: 1800, strokes: 1 }]
-            },
-            {
-                id: "c5", name: "A柱内板", category: "车身件", material: "HC340/590DP", thickness: 1.2, length: 1100, width: 450,
-                processes: [{ name: "落料", tonnage: 400, dieWeight: 1600, strokes: 1 }, { name: "拉伸", tonnage: 630, dieWeight: 2100, strokes: 1 }, { name: "切边", tonnage: 400, dieWeight: 1100, strokes: 1 }]
-            },
-            {
-                id: "c6", name: "车架纵梁", category: "商用车底盘", material: "510L", thickness: 3.0, length: 2000, width: 250,
-                processes: [{ name: "落料", tonnage: 800, dieWeight: 2500, strokes: 1 }, { name: "冲孔", tonnage: 630, dieWeight: 1800, strokes: 6 }, { name: "弯曲", tonnage: 1000, dieWeight: 3000, strokes: 2 }, { name: "整形", tonnage: 800, dieWeight: 2000, strokes: 1 }]
-            },
-            {
-                id: "c7", name: "发动机横梁", category: "商用车底盘", material: "QSTE500TM", thickness: 2.5, length: 1600, width: 200,
-                processes: [{ name: "落料", tonnage: 630, dieWeight: 2000, strokes: 1 }, { name: "拉伸", tonnage: 800, dieWeight: 2800, strokes: 1 }, { name: "冲孔", tonnage: 400, dieWeight: 1200, strokes: 4 }, { name: "切边", tonnage: 400, dieWeight: 1400, strokes: 1 }]
-            },
-            {
-                id: "c8", name: "支架", category: "小冲压件", material: "DC01", thickness: 1.2, length: 150, width: 80,
-                processes: [{ name: "落料", tonnage: 160, dieWeight: 500, strokes: 1 }, { name: "冲孔", tonnage: 110, dieWeight: 300, strokes: 2 }, { name: "弯曲", tonnage: 110, dieWeight: 400, strokes: 1 }]
-            },
-            {
-                id: "c9", name: "加强板", category: "小冲压件", material: "Q235A", thickness: 2.0, length: 300, width: 120,
-                processes: [{ name: "落料", tonnage: 250, dieWeight: 800, strokes: 1 }, { name: "冲孔", tonnage: 160, dieWeight: 500, strokes: 3 }]
-            },
-            {
-                id: "c10", name: "空调冷凝器支架", category: "商用车小件", material: "DC01", thickness: 1.5, length: 200, width: 80,
-                processes: [{ name: "落料", tonnage: 160, dieWeight: 400, strokes: 1 }, { name: "冲孔", tonnage: 110, dieWeight: 300, strokes: 2 }, { name: "弯曲", tonnage: 110, dieWeight: 350, strokes: 1 }]
-            },
-            {
-                id: "c11", name: "电瓶框横梁", category: "商用车底盘", material: "Q235A", thickness: 2.0, length: 800, width: 150,
-                processes: [{ name: "落料", tonnage: 315, dieWeight: 1200, strokes: 1 }, { name: "冲孔", tonnage: 250, dieWeight: 800, strokes: 4 }, { name: "弯曲", tonnage: 250, dieWeight: 900, strokes: 2 }]
-            },
-            {
-                id: "c12", name: "油箱托架", category: "商用车底盘", material: "510L", thickness: 2.5, length: 600, width: 180,
-                processes: [{ name: "落料", tonnage: 400, dieWeight: 1500, strokes: 1 }, { name: "冲孔", tonnage: 315, dieWeight: 1000, strokes: 3 }, { name: "弯曲", tonnage: 315, dieWeight: 1200, strokes: 2 }]
-            }
-        ];
-
-        let bomTree = [];
-        let weldRelations = [];
-        let currentEditingNodeId = null;
-        let feedbackList = [];
-
-        function generateId() { return Date.now() + '-' + Math.random().toString(36).substr(2, 6); }
-
-        // 存储与加载
-        function loadStorage() {
-            let m = localStorage.getItem('stamping_materials'); if (m) stampingMaterialsData = JSON.parse(m);
-            let e = localStorage.getItem('stamping_equipment'); if (e) equipmentData = JSON.parse(e);
-            let c = localStorage.getItem('stamping_caseLibrary'); if (c) caseLibrary = JSON.parse(c);
-            let b = localStorage.getItem('stamping_bomTree'); if (b) bomTree = JSON.parse(b);
-            let w = localStorage.getItem('stamping_weldRelations'); if (w) weldRelations = JSON.parse(w);
-            let f = localStorage.getItem('stamping_feedback'); if (f) feedbackList = JSON.parse(f);
-            let diePrice = localStorage.getItem('stamping_diePricePerKg');
-            if (diePrice !== null) document.getElementById('diePricePerKg').value = diePrice;
-            if (!bomTree.length) loadSampleBom();
-        }
-        function saveAll() {
-            localStorage.setItem('stamping_materials', JSON.stringify(stampingMaterialsData));
-            localStorage.setItem('stamping_equipment', JSON.stringify(equipmentData));
-            localStorage.setItem('stamping_caseLibrary', JSON.stringify(caseLibrary));
-            localStorage.setItem('stamping_bomTree', JSON.stringify(bomTree));
-            localStorage.setItem('stamping_weldRelations', JSON.stringify(weldRelations));
-            localStorage.setItem('stamping_feedback', JSON.stringify(feedbackList));
-            localStorage.setItem('stamping_diePricePerKg', document.getElementById('diePricePerKg').value);
-        }
-        function showToast(msg, err = false) { let t = document.createElement('div'); t.className = 'toast'; t.style.background = err ? '#dc2626' : '#1e293b'; t.textContent = msg; document.body.appendChild(t); setTimeout(() => t.remove(), 3000); }
-
-        function loadSampleBom() {
-            bomTree = [
-                {
-                    id: generateId(), name: "主骨架", qty: 1, materialId: "dc01", thickness: 1.2, length: 800, width: 500, height: 100, blankLen: 850, blankWid: 550,
-                    processes: [{ name: "落料", tonnage: 400, dieWeight: 1500, strokes: 1 }, { name: "冲孔", tonnage: 250, dieWeight: 800, strokes: 2 }, { name: "拉伸", tonnage: 630, dieWeight: 2000, strokes: 1 }],
-                    children: [
-                        {
-                            id: generateId(), name: "左加强板", qty: 2, materialId: "dc01", thickness: 1.0, length: 400, width: 100, height: 20, blankLen: 420, blankWid: 120,
-                            processes: [{ name: "落料", tonnage: 250, dieWeight: 600, strokes: 1 }, { name: "冲孔", tonnage: 160, dieWeight: 400, strokes: 2 }], children: []
-                        },
-                        {
-                            id: generateId(), name: "右加强板", qty: 2, materialId: "dc01", thickness: 1.0, length: 400, width: 100, height: 20, blankLen: 420, blankWid: 120,
-                            processes: [{ name: "落料", tonnage: 250, dieWeight: 600, strokes: 1 }, { name: "冲孔", tonnage: 160, dieWeight: 400, strokes: 2 }], children: []
-                        }
-                    ]
-                }
-            ];
-            weldRelations = [
-                { fromPartId: bomTree[0].id, toPartId: bomTree[0].children[0].id, weldType: "spot", spotCount: 4, lengthMm: 0 },
-                { fromPartId: bomTree[0].id, toPartId: bomTree[0].children[1].id, weldType: "spot", spotCount: 4, lengthMm: 0 }
-            ];
-            saveAll();
-        }
-
-        function calculatePartWeight(node) {
-            let mat = stampingMaterialsData.find(m => m.id === node.materialId);
-            let density = mat ? mat.Density : 7.85;
-            let blankLen = node.blankLen || 0;
-            let blankWid = node.blankWid || 0;
-            let thickness = node.thickness;
-            if (blankLen > 0 && blankWid > 0) {
-                let volumeCm3 = (blankLen * blankWid * thickness) / 1000;
-                return volumeCm3 * density;
-            } else {
-                let volumeCm3 = (node.length * node.width * thickness) / 1000 * 0.6;
-                return volumeCm3 * density;
-            }
-        }
-
-        // ========== BOM 渲染 ==========
-        function renderBomTree() {
-            let container = document.getElementById('bomTreeContainer');
-            if (!container) return;
-            let html = `<table class="bom-tree-table" style="min-width:1200px">
-        <thead><tr>
-            <th style="width:15%">零件名称</th><th>数量</th><th>材料</th>
-            <th>厚(mm)</th>
-            <th>外廓长(mm)</th><th>外廓宽(mm)</th><th>外廓高(mm)</th>
-            <th>下料长(mm)</th><th>下料宽(mm)</th>
-            <th>单件净重(g)</th><th>操作</th>
-        </tr></thead><tbody>`;
-            function renderNodes(nodes, level) {
-                for (let node of nodes) {
-                    let indent = level * 24;
-                    let indentHtml = `<span style="display:inline-block; width:${indent}px;"></span>`;
-                    let materialOpts = stampingMaterialsData.map(m => `<option value="${m.id}" ${node.materialId === m.id ? 'selected' : ''}>${m.MaterialCode}</option>`).join('');
-                    let partWeight = calculatePartWeight(node);
-                    html += `<tr data-id="${node.id}">
-                <td style="text-align:left"><div style="display:flex;align-items:center;">${indentHtml}${level > 0 ? '↳' : ''}<input type="text" value="${escapeHtml(node.name)}" class="bom-name" style="margin-left:4px; width:calc(100% - 24px);"></div></td>
-                <td><input type="number" value="${node.qty}" class="bom-qty" step="1" style="width:60px;"></td>
-                <td><select class="bom-material" style="width:110px;">${materialOpts}</select></td>
-                <td><input type="number" value="${node.thickness}" class="bom-thickness" step="0.1" style="width:70px;"></td>
-                <td><input type="number" value="${node.length}" class="bom-length" step="10" style="width:70px;"></td>
-                <td><input type="number" value="${node.width}" class="bom-width" step="10" style="width:70px;"></td>
-                <td><input type="number" value="${node.height || 0}" class="bom-height" step="10" style="width:70px;"></td>
-                <td><input type="number" value="${node.blankLen || 0}" class="bom-blank-len" step="10" style="width:80px;"></td>
-                <td><input type="number" value="${node.blankWid || 0}" class="bom-blank-wid" step="10" style="width:80px;"></td>
-                <td><span class="part-weight-display">${partWeight.toFixed(1)}</span></td>
-                <td style="white-space: nowrap;">
-                    <button class="small outline edit-process" data-id="${node.id}">⚙️工序</button>
-                    <button class="small outline add-child" data-id="${node.id}">+子件</button>
-                    <button class="small danger delete-node" data-id="${node.id}">删</button>
-                </td>
-            </tr>`;
-                    if (node.children && node.children.length) renderNodes(node.children, level + 1);
-                }
-            }
-            renderNodes(bomTree, 0);
-            html += '</tbody></table>';
-            container.innerHTML = html;
-            // 绑定事件
-            function bindInput(selector, field, isNumber = false) {
-                document.querySelectorAll(selector).forEach(el => {
-                    let tr = el.closest('tr'); if (!tr) return;
-                    let id = tr.dataset.id;
-                    el.addEventListener('change', () => {
-                        let val = isNumber ? parseFloat(el.value) : el.value;
-                        updateNodeField(id, field, val);
-                    });
-                });
-            }
-            bindInput('#bomTreeContainer .bom-name', 'name');
-            bindInput('#bomTreeContainer .bom-qty', 'qty', true);
-            bindInput('#bomTreeContainer .bom-thickness', 'thickness', true);
-            bindInput('#bomTreeContainer .bom-length', 'length', true);
-            bindInput('#bomTreeContainer .bom-width', 'width', true);
-            bindInput('#bomTreeContainer .bom-height', 'height', true);
-            bindInput('#bomTreeContainer .bom-blank-len', 'blankLen', true);
-            bindInput('#bomTreeContainer .bom-blank-wid', 'blankWid', true);
-            document.querySelectorAll('#bomTreeContainer .bom-material').forEach(el => {
-                let tr = el.closest('tr'); let id = tr.dataset.id;
-                el.addEventListener('change', () => { updateNodeField(id, 'materialId', el.value); renderBomTree(); calculate(); });
-            });
-            document.querySelectorAll('#bomTreeContainer .edit-process').forEach(btn => btn.onclick = () => openProcessEditor(btn.dataset.id));
-            document.querySelectorAll('#bomTreeContainer .add-child').forEach(btn => btn.onclick = () => addChildNode(btn.dataset.id));
-            document.querySelectorAll('#bomTreeContainer .delete-node').forEach(btn => btn.onclick = () => deleteNode(btn.dataset.id));
-        }
-        function findNodeById(nodes, id) {
-            for (let node of nodes) {
-                if (node.id === id) return node;
-                if (node.children) { let found = findNodeById(node.children, id); if (found) return found; }
-            }
-            return null;
-        }
-        function updateNodeField(id, field, value) {
-            let node = findNodeById(bomTree, id);
-            if (node) { node[field] = value; saveAll(); renderBomTree(); calculate(); }
-        }
-        function addChildNode(parentId) {
-            let parent = findNodeById(bomTree, parentId);
-            if (parent) {
-                let newNode = {
-                    id: generateId(), name: "新零件", qty: 1, materialId: stampingMaterialsData[0].id,
-                    thickness: 1.0, length: 100, width: 100, height: 50, blankLen: 110, blankWid: 110,
-                    processes: [{ name: "落料", tonnage: 160, dieWeight: 500, strokes: 1 }], children: []
-                };
-                if (!parent.children) parent.children = [];
-                parent.children.push(newNode);
-                saveAll(); renderBomTree(); calculate();
-                showToast("已添加子零件");
-            }
-        }
-        function deleteNode(id) {
-            let removeFromArray = (arr) => {
-                for (let i = 0; i < arr.length; i++) {
-                    if (arr[i].id === id) { arr.splice(i, 1); return true; }
-                    if (arr[i].children && removeFromArray(arr[i].children)) return true;
-                }
-                return false;
-            };
-            if (confirm("删除零件及其所有子零件？")) {
-                removeFromArray(bomTree);
-                weldRelations = weldRelations.filter(r => r.fromPartId !== id && r.toPartId !== id);
-                saveAll(); renderBomTree(); calculate();
-                showToast("已删除");
-            }
-        }
-        function openProcessEditor(nodeId) {
-            let node = findNodeById(bomTree, nodeId);
-            if (!node) return;
-            currentEditingNodeId = nodeId;
-            let container = document.getElementById('processEditorContainer');
-            let processes = node.processes || [];
-            let html = `<table class="process-table" id="editProcessTable"><thead><tr><th>工序名</th><th>设备吨位(T)</th><th>模具重量(kg)</th><th>冲次</th><th>操作</th></tr></thead><tbody>`;
-            processes.forEach((p, idx) => {
-                html += `<tr data-idx="${idx}">
-            <td><input type="text" value="${p.name}" class="proc-name-${idx}" style="width:100px;"></td>
-            <td><input type="number" value="${p.tonnage}" class="proc-tonnage-${idx}" step="10" style="width:90px;"></td>
-            <td><input type="number" value="${p.dieWeight}" class="proc-die-${idx}" step="50" style="width:90px;"></td>
-            <td><input type="number" value="${p.strokes}" class="proc-strokes-${idx}" step="1" style="width:70px;"></td>
-            <td><button class="small outline delete-process" data-idx="${idx}">删除</button></td>
-        </tr>`;
-            });
-            html += `</tbody><table><div class="inline-form"><input type="text" id="newProcName" placeholder="新工序名"><input type="number" id="newProcTonnage" placeholder="吨位" step="10"><input type="number" id="newProcDieWeight" placeholder="模具重量" step="50"><input type="number" id="newProcStrokes" placeholder="冲次" value="1"><button class="primary small" id="addProcessToNodeBtn">+添加</button></div>`;
-            container.innerHTML = html;
-            document.querySelectorAll('#editProcessTable .delete-process').forEach(btn => btn.onclick = () => { processes.splice(parseInt(btn.dataset.idx), 1); openProcessEditor(nodeId); });
-            document.getElementById('addProcessToNodeBtn').onclick = () => {
-                let name = document.getElementById('newProcName').value.trim();
-                let tonnage = parseFloat(document.getElementById('newProcTonnage').value);
-                let dieWeight = parseFloat(document.getElementById('newProcDieWeight').value);
-                let strokes = parseFloat(document.getElementById('newProcStrokes').value);
-                if (!name || isNaN(tonnage) || isNaN(dieWeight) || isNaN(strokes)) { alert("请完整填写"); return; }
-                processes.push({ name, tonnage, dieWeight, strokes });
-                openProcessEditor(nodeId);
-            };
-            document.getElementById('processModal').style.display = 'flex';
-        }
-        function saveProcessesFromModal() {
-            if (!currentEditingNodeId) return;
-            let node = findNodeById(bomTree, currentEditingNodeId);
-            if (!node) return;
-            let processes = [];
-            let rows = document.querySelectorAll('#editProcessTable tbody tr');
-            for (let row of rows) {
-                let idx = row.dataset.idx;
-                let name = row.querySelector(`.proc-name-${idx}`)?.value;
-                let tonnage = parseFloat(row.querySelector(`.proc-tonnage-${idx}`)?.value);
-                let dieWeight = parseFloat(row.querySelector(`.proc-die-${idx}`)?.value);
-                let strokes = parseFloat(row.querySelector(`.proc-strokes-${idx}`)?.value);
-                if (name && !isNaN(tonnage) && !isNaN(dieWeight) && !isNaN(strokes)) processes.push({ name, tonnage, dieWeight, strokes });
-            }
-            node.processes = processes;
-            saveAll();
-            document.getElementById('processModal').style.display = 'none';
-            calculate();
-            showToast("工序已保存");
-        }
-
-        // ========== 焊接关系 ==========
-        function renderWeldRelationsUI() {
-            let container = document.getElementById('weldRelationsContainer');
-            let html = `<table class="weld-relations-table"><thead><tr><th>父零件</th><th>子零件</th><th>焊接类型</th><th>焊点数量</th><th>焊缝长度(mm)</th><th>操作</th></tr></thead><tbody>`;
-            for (let i = 0; i < weldRelations.length; i++) {
-                let rel = weldRelations[i];
-                let fromNode = findNodeById(bomTree, rel.fromPartId);
-                let toNode = findNodeById(bomTree, rel.toPartId);
-                let fromName = fromNode ? fromNode.name : '?';
-                let toName = toNode ? toNode.name : '?';
-                html += `<tr data-idx="${i}">
-            <td><input type="text" value="${escapeHtml(fromName)}" readonly style="width:120px;"> (${rel.fromPartId.substr(-6)})</td>
-            <td><input type="text" value="${escapeHtml(toName)}" readonly style="width:120px;"> (${rel.toPartId.substr(-6)})</td>
-            <td><select class="weld-type-${i}"><option value="spot" ${rel.weldType === 'spot' ? 'selected' : ''}>点焊</option><option value="mig" ${rel.weldType === 'mig' ? 'selected' : ''}>二保焊</option><option value="laser" ${rel.weldType === 'laser' ? 'selected' : ''}>激光焊</option></select></td>
-            <td><input type="number" value="${rel.spotCount || 0}" class="spot-count-${i}" step="1" style="width:70px;"></td>
-            <td><input type="number" value="${rel.lengthMm || 0}" class="weld-len-${i}" step="10" style="width:80px;"></td>
-            <td><button class="small danger delete-weld" data-idx="${i}">删除</button></td>
-        </tr>`;
-            }
-            html += `</tbody></td>`;
-            container.innerHTML = html;
-            for (let i = 0; i < weldRelations.length; i++) {
-                document.querySelector(`.weld-type-${i}`).addEventListener('change', (e) => { weldRelations[i].weldType = e.target.value; });
-                document.querySelector(`.spot-count-${i}`).addEventListener('change', (e) => { weldRelations[i].spotCount = parseInt(e.target.value) || 0; });
-                document.querySelector(`.weld-len-${i}`).addEventListener('change', (e) => { weldRelations[i].lengthMm = parseInt(e.target.value) || 0; });
-                document.querySelector(`.delete-weld[data-idx="${i}"]`).addEventListener('click', () => { weldRelations.splice(i, 1); renderWeldRelationsUI(); });
-            }
-        }
-        function addWeldRelation() {
-            let allParts = [];
-            function collect(nodes, prefix = '') { for (let node of nodes) { allParts.push({ id: node.id, name: prefix + node.name }); if (node.children) collect(node.children, prefix + '  '); } }
-            collect(bomTree);
-            if (allParts.length < 2) { alert("至少需要两个零件"); return; }
-            let partOptions = allParts.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
-            let modalDiv = document.createElement('div'); modalDiv.className = 'modal'; modalDiv.style.display = 'flex';
-            modalDiv.innerHTML = `<div class="modal-content" style="width:400px;"><div class="modal-header"><h3>选择焊接对</h3><button class="outline" id="closePickerBtn">✕</button></div>
-        <div><label>父零件：</label><select id="weldFromPart">${partOptions}</select></div>
-        <div><label>子零件：</label><select id="weldToPart">${partOptions}</select></div>
-        <div class="toolbar"><button class="primary" id="confirmAddWeldBtn">确认</button><button class="outline" id="cancelAddWeldBtn">取消</button></div></div>`;
-            document.body.appendChild(modalDiv);
-            let closeModal = () => modalDiv.remove();
-            document.getElementById('closePickerBtn').onclick = closeModal;
-            document.getElementById('cancelAddWeldBtn').onclick = closeModal;
-            document.getElementById('confirmAddWeldBtn').onclick = () => {
-                let fromId = document.getElementById('weldFromPart').value, toId = document.getElementById('weldToPart').value;
-                if (fromId === toId) { alert("不能自己焊自己"); return; }
-                weldRelations.push({ fromPartId: fromId, toPartId: toId, weldType: "spot", spotCount: 2, lengthMm: 0 });
-                closeModal(); renderWeldRelationsUI(); showToast("已添加焊接关系");
-            };
-        }
-
-        // ========== 板材价格库维护 ==========
-        function renderMaterialModal() {
-            let tbody = document.getElementById('materialTableBody');
-            tbody.innerHTML = stampingMaterialsData.map((m, idx) => `
-        <tr>
-            <td><input value="${escapeHtml(m.MaterialCode)}" class="mat-code-${idx}" style="width:100px;"></td>
-            <td><input value="${m.Type}" class="mat-type-${idx}" style="width:80px;"></td>
-            <td><input value="${m.Spec}" class="mat-spec-${idx}" style="width:120px;"></td>
-            <td><input type="number" value="${m.UnitPrice}" class="mat-price-${idx}" step="0.1" style="width:90px;"></td>
-            <td><span class="edit-icon" data-idx="${idx}">💾</span><span class="delete-icon" data-idx="${idx}">🗑️</span></td>
-        </tr>
-    `).join('');
-            attachMaterialEvents();
-        }
-        function attachMaterialEvents() {
-            document.querySelectorAll('#materialTableBody .edit-icon').forEach(el => {
-                el.onclick = () => {
-                    let idx = parseInt(el.dataset.idx);
-                    stampingMaterialsData[idx].MaterialCode = document.querySelector(`.mat-code-${idx}`).value;
-                    stampingMaterialsData[idx].Type = document.querySelector(`.mat-type-${idx}`).value;
-                    stampingMaterialsData[idx].Spec = document.querySelector(`.mat-spec-${idx}`).value;
-                    stampingMaterialsData[idx].UnitPrice = parseFloat(document.querySelector(`.mat-price-${idx}`).value);
-                    saveAll(); refreshMaterialPreview(); renderMaterialModal(); calculate();
-                    showToast("材料已保存");
-                };
-            });
-            document.querySelectorAll('#materialTableBody .delete-icon').forEach(el => {
-                el.onclick = () => {
-                    if (confirm("删除该材料？")) {
-                        stampingMaterialsData.splice(parseInt(el.dataset.idx), 1);
-                        if (stampingMaterialsData.length === 0) {
-                            stampingMaterialsData.push({ id: "default", MaterialCode: "Q235A", Type: "热轧", Spec: "3.0mm", Thickness: 3.0, Density: 7.85, UnitPrice: 3.5 });
-                        }
-                        saveAll(); refreshMaterialPreview(); renderMaterialModal(); calculate();
-                        showToast("已删除");
-                    }
-                };
-            });
-        }
-        function refreshMaterialPreview() {
-            let tbody = document.getElementById('materialPreviewBody');
-            tbody.innerHTML = stampingMaterialsData.map(m => `<tr><td>${m.MaterialCode}</td><td>${m.Type}</td><td>${m.Spec}</td><td>${m.UnitPrice}</td></tr>`).join('');
-        }
-
-        // ========== 设备费率库维护 ==========
-        function renderEquipmentModal() {
-            let tbody = document.getElementById('equipmentTableBody');
-            tbody.innerHTML = equipmentData.map((eq, idx) => `
-        <tr>
-            <td><input type="number" value="${eq.tonnage}" class="eq-ton-${idx}" step="10" style="width:90px;"></td>
-            <td><input type="number" value="${eq.hourlyRate}" class="eq-rate-${idx}" step="5" style="width:90px;"></td>
-            <td><input type="number" value="${eq.spm}" class="eq-spm-${idx}" step="5" style="width:80px;"></td>
-            <td><span class="edit-icon" data-idx="${idx}">💾</span><span class="delete-icon" data-idx="${idx}">🗑️</span></td>
-        </tr>
-    `).join('');
-            attachEquipmentEvents();
-        }
-        function attachEquipmentEvents() {
-            document.querySelectorAll('#equipmentTableBody .edit-icon').forEach(el => {
-                el.onclick = () => {
-                    let idx = parseInt(el.dataset.idx);
-                    equipmentData[idx].tonnage = parseFloat(document.querySelector(`.eq-ton-${idx}`).value);
-                    equipmentData[idx].hourlyRate = parseFloat(document.querySelector(`.eq-rate-${idx}`).value);
-                    equipmentData[idx].spm = parseFloat(document.querySelector(`.eq-spm-${idx}`).value);
-                    saveAll(); refreshEquipmentPreview(); renderEquipmentModal(); calculate();
-                    showToast("设备已保存");
-                };
-            });
-            document.querySelectorAll('#equipmentTableBody .delete-icon').forEach(el => {
-                el.onclick = () => {
-                    if (confirm("删除该设备？")) {
-                        equipmentData.splice(parseInt(el.dataset.idx), 1);
-                        if (equipmentData.length === 0) {
-                            equipmentData.push({ id: "eq1", tonnage: 400, hourlyRate: 120, spm: 45 });
-                        }
-                        saveAll(); refreshEquipmentPreview(); renderEquipmentModal(); calculate();
-                        showToast("已删除");
-                    }
-                };
-            });
-        }
-        function refreshEquipmentPreview() {
-            let tbody = document.getElementById('equipmentPreviewBody');
-            tbody.innerHTML = equipmentData.map(e => `<tr><td>${e.tonnage}</td><td>${e.hourlyRate}</td><td>${e.spm}</td></tr>`).join('');
-        }
-
-        // ========== 成本计算 ==========
-        function calculate() {
-            try {
-                let annualQty = parseInt(document.getElementById('annualQty').value) || 100000;
-                let totalMaterialCost = 0, totalProcessCost = 0, totalDieWeight = 0;
-                let detailLines = [], materialLines = [];
-                function traverse(node, level) {
-                    let mat = stampingMaterialsData.find(m => m.id === node.materialId);
-                    let density = mat ? mat.Density : 7.85, price = mat ? mat.UnitPrice : 5.8;
-                    let partWeight = calculatePartWeight(node);
-                    let partMaterialCost = (partWeight / 1000) * price * node.qty;
-                    totalMaterialCost += partMaterialCost;
-                    materialLines.push(`${'  '.repeat(level)}${node.name} x${node.qty}: 单件净重${partWeight.toFixed(1)}g, 材料费${partMaterialCost.toFixed(2)}元`);
-                    let processes = node.processes || [];
-                    for (let proc of processes) {
-                        let eq = equipmentData.find(e => e.tonnage === proc.tonnage);
-                        let ratePerStroke = eq ? (eq.hourlyRate / (eq.spm * 60)) : 0.05;
-                        let cost = ratePerStroke * proc.strokes * node.qty;
-                        totalProcessCost += cost;
-                        totalDieWeight += proc.dieWeight * node.qty;
-                        detailLines.push(`${'  '.repeat(level)}${node.name} - ${proc.name}: 冲次${proc.strokes}次, 冲次费${cost.toFixed(4)}元, 模具重${proc.dieWeight}kg`);
-                    }
-                    if (node.children) node.children.forEach(c => traverse(c, level + 1));
-                }
-                bomTree.forEach(root => traverse(root, 0));
-                // 焊接成本
-                let totalWeldCost = 0, weldDetails = [];
-                for (let rel of weldRelations) {
-                    let rate = rel.weldType === 'spot' ? 0.25 : (rel.weldType === 'mig' ? 0.10 : 0.45);
-                    let cost = rel.weldType === 'spot' ? (rel.spotCount || 0) * rate : ((rel.lengthMm || 0) / 10) * rate;
-                    totalWeldCost += cost;
-                    weldDetails.push(`焊接: ${cost.toFixed(2)}元`);
-                }
-                let diePricePerKg = parseFloat(document.getElementById('diePricePerKg').value) || 25;
-                let diePriceTotal = totalDieWeight * diePricePerKg;
-                let supplierRatio = document.getElementById('diePayment').value === 'full_automaker' ? 0 : (document.getElementById('diePayment').value === 'partial' ? (parseFloat(document.getElementById('partialRatio').value) || 0) / 100 : 1);
-                let dieAmort = (diePriceTotal * supplierRatio) / annualQty;
-                // 废料扣减
-                let scrapPrice = parseFloat(document.getElementById('scrapPrice').value) || 2.0;
-                let scrapMethod = document.getElementById('scrapAccountingMethod').value;
-                let scrapValue = totalMaterialCost * 0.05;
-                if (scrapMethod === 'deduct') totalMaterialCost = Math.max(0, totalMaterialCost - scrapValue);
-                // 物流费
-                let dist = parseFloat(document.getElementById('logisticsDistance').value) || 500;
-                let rate = parseFloat(document.getElementById('ratePerTonKm').value) || 0.5;
-                let minFreight = parseFloat(document.getElementById('minFreight').value) || 300;
-                let fullLoad = parseInt(document.getElementById('fullLoadQty').value) || 8000;
-                let handling = parseFloat(document.getElementById('handlingFee').value) || 0.5;
-                let totalWeightKg = totalMaterialCost / 6.0;
-                let theoretical = rate * totalWeightKg * dist;
-                let actual = Math.max(theoretical, minFreight);
-                let logisticsCost = actual / fullLoad + handling;
-                let direct = totalMaterialCost + totalProcessCost + dieAmort + totalWeldCost + logisticsCost;
-                let mgmt = direct * 0.12;
-                let profit = (direct + mgmt) * 0.10;
-                let total = direct + mgmt + profit;
-                let quote = total * 1.13;
-                document.getElementById('totalCostVal').innerHTML = total.toFixed(2) + ' 元';
-                document.getElementById('quotePriceVal').innerHTML = quote.toFixed(2) + ' 元';
-                document.getElementById('dieCostDetail').innerHTML = `💰 模具总重 ${totalDieWeight.toFixed(0)}kg, 单价 ${diePricePerKg}元/kg, 总价 ${diePriceTotal.toFixed(0)}元, 单件分摊 ${dieAmort.toFixed(3)}元`;
-                document.getElementById('materialBreakdown').innerHTML = `<strong>材料明细</strong><br>${materialLines.join('<br>')}`;
-                let costItems = [
-                    { name: '材料费', val: totalMaterialCost }, { name: '冲压加工', val: totalProcessCost },
-                    { name: '模具分摊', val: dieAmort }, { name: '焊接费', val: totalWeldCost },
-                    { name: '物流费', val: logisticsCost }, { name: '管理费', val: mgmt }, { name: '利润', val: profit }
-                ];
-                document.getElementById('costDetails').innerHTML = costItems.map(c => `<div class="cost-card"><span>${c.name}</span><span>${c.val.toFixed(2)}元</span></div>`).join('');
-                let detailsDiv = document.getElementById('calcDetails');
-                if (detailsDiv) detailsDiv.innerHTML = [...detailLines, ...weldDetails].map(d => `<div class="calc-detail-line">${d}</div>`).join('');
-                if (window.chartInstance) window.chartInstance.destroy();
-                let ctx = document.getElementById('costChart').getContext('2d');
-                window.chartInstance = new Chart(ctx, { type: 'pie', data: { labels: costItems.map(c => c.name), datasets: [{ data: costItems.map(c => c.val), backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec489a', '#06b6d4'] }] } });
-                let name = document.getElementById('assemblyName').value;
-                let historyList = JSON.parse(localStorage.getItem('stamping_history') || '[]');
-                historyList.unshift({ id: Date.now(), name, totalCost: total, quote, time: new Date().toLocaleString() });
-                if (historyList.length > 10) historyList.pop();
-                localStorage.setItem('stamping_history', JSON.stringify(historyList));
-                let histDiv = document.getElementById('historyList');
-                if (histDiv) histDiv.innerHTML = historyList.slice(0, 5).map(h => `<div style="padding:6px; border-bottom:1px solid #e2e8f0;"><strong>${h.name}</strong> ${h.totalCost.toFixed(2)}元 <span style="float:right;">${h.time}</span></div>`).join('');
-            } catch (e) { console.error(e); alert("计算错误:" + e.message); }
-        }
-
-        function calcSimilarity(caseItem, length, width, thickness, materialId) {
-            let mat = stampingMaterialsData.find(m => m.id === materialId);
-            let matCode = mat ? mat.MaterialCode : '';
-            let sizeDiff = Math.abs(caseItem.length - length) + Math.abs(caseItem.width - width);
-            let thickDiff = Math.abs(caseItem.thickness - thickness);
-            let matMatch = (caseItem.material === matCode) ? 0 : 20;
-            let score = 100 - (sizeDiff / 100) - thickDiff * 10 - matMatch;
-            return Math.max(0, Math.min(100, score));
-        }
-        function refreshCaseMatch() {
-            let length = 800, width = 500, thickness = 1.2, materialId = "dc01";
-            if (bomTree.length) {
-                let first = bomTree[0];
-                length = first.length || 800; width = first.width || 500; thickness = first.thickness || 1.2; materialId = first.materialId || "dc01";
-            }
-            let scores = caseLibrary.map(c => ({ case: c, score: calcSimilarity(c, length, width, thickness, materialId) }));
-            scores.sort((a, b) => b.score - a.score);
-            let container = document.getElementById('caseMatchPanel');
-            container.innerHTML = '<div style="font-weight:600; margin-bottom:10px;">📌 相似案例推荐</div>';
-            scores.slice(0, 6).forEach(s => {
-                let div = document.createElement('div'); div.className = 'case-item';
-                div.innerHTML = `<div><strong>${s.case.name}</strong> (${s.case.category})<span class="case-score">匹配度 ${s.score.toFixed(0)}%</span></div>
-                        <div style="font-size:0.7rem;">材料:${s.case.material} 厚:${s.case.thickness}mm 尺寸:${s.case.length}x${s.case.width}</div>
-                        <div class="progress-bar"><div class="progress-fill" style="width:${s.score}%"></div></div>`;
-                div.onclick = () => {
-                    if (confirm(`应用案例“${s.case.name}”的工序配置到顶层零件？`)) {
-                        if (bomTree.length) { bomTree[0].processes = s.case.processes.map(p => ({ ...p })); saveAll(); renderBomTree(); calculate(); showToast(`已应用案例 ${s.case.name}`); }
-                        else alert("无顶层零件");
-                    }
-                };
-                container.appendChild(div);
-            });
-        }
-
-        // 反馈相关
-        function renderFeedbackList() {
-            let container = document.getElementById('feedbackList');
-            if (!container) return;
-            if (feedbackList.length === 0) { container.innerHTML = '<div style="padding:20px;text-align:center;">暂无反馈</div>'; return; }
-            let html = '';
-            feedbackList.forEach(f => {
-                html += `<div><strong>${f.time}</strong><br>${escapeHtml(f.content)}</div><hr>`;
-            });
-            container.innerHTML = html;
-        }
-        function addFeedback(content) {
-            if (!content.trim()) return;
-            feedbackList.unshift({ id: Date.now(), content: content, time: new Date().toLocaleString() });
-            saveAll();
-            renderFeedbackList();
-            showToast("感谢反馈");
-        }
-        function exportFeedbackCSV() {
-            if (!feedbackList.length) return;
-            let csv = [["时间", "内容"]];
-            feedbackList.forEach(f => csv.push([f.time, f.content]));
-            let blob = new Blob([csv.map(row => row.join(",")).join("\n")], { type: "text/csv" });
-            let a = document.createElement("a");
-            a.href = URL.createObjectURL(blob);
-            a.download = `feedback_${Date.now()}.csv`;
-            a.click();
-        }
-
-        // ========== 初始化 ==========
-        function init() {
-            loadStorage();
-            renderBomTree();
-            refreshCaseMatch();
-            refreshMaterialPreview();
-            refreshEquipmentPreview();
-            document.getElementById('calcBtn').onclick = calculate;
-            document.getElementById('resetBtn').onclick = () => { if (confirm('重置所有数据？')) { localStorage.clear(); location.reload(); } };
-            document.getElementById('addRootPartBtn').onclick = () => {
-                let newNode = {
-                    id: generateId(), name: "新总成", qty: 1, materialId: stampingMaterialsData[0].id, thickness: 1.0, length: 300, width: 200, height: 50, blankLen: 330, blankWid: 230,
-                    processes: [{ name: "落料", tonnage: 160, dieWeight: 500, strokes: 1 }], children: []
-                };
-                bomTree.push(newNode); saveAll(); renderBomTree(); calculate();
-            };
-            document.getElementById('importSampleBomBtn').onclick = () => { loadSampleBom(); renderBomTree(); calculate(); showToast("已导入示例BOM"); };
-            document.getElementById('openWeldRelationsBtn').onclick = () => { renderWeldRelationsUI(); document.getElementById('weldRelationsModal').style.display = 'flex'; };
-            document.getElementById('closeWeldRelationsModal').onclick = () => document.getElementById('weldRelationsModal').style.display = 'none';
-            document.getElementById('addWeldRelationBtn').onclick = addWeldRelation;
-            document.getElementById('addChildWeldRelationBtn').onclick = addWeldRelation;
-            document.getElementById('saveWeldRelationsBtn').onclick = () => { saveAll(); document.getElementById('weldRelationsModal').style.display = 'none'; calculate(); showToast("焊接关系已保存"); };
-            document.getElementById('diePayment').addEventListener('change', function () { document.getElementById('partialRatioGroup').style.display = this.value === 'partial' ? 'block' : 'none'; calculate(); });
-            document.getElementById('saveProcessBtn').onclick = saveProcessesFromModal;
-            document.getElementById('closeProcessModal').onclick = () => document.getElementById('processModal').style.display = 'none';
-            document.getElementById('refreshCaseMatchBtn').onclick = refreshCaseMatch;
-            document.getElementById('diePricePerKg').addEventListener('change', () => { saveAll(); calculate(); });
-            // 板材库
-            document.getElementById('openMaterialModalBtn').onclick = () => { renderMaterialModal(); document.getElementById('materialModal').style.display = 'flex'; };
-            document.getElementById('closeMaterialModal').onclick = () => document.getElementById('materialModal').style.display = 'none';
-            document.getElementById('addMaterialBtn').onclick = () => {
-                let type = document.getElementById('newMatType').value;
-                let code = document.getElementById('newMatCode').value.trim();
-                let spec = document.getElementById('newMatSpec').value.trim();
-                let price = parseFloat(document.getElementById('newMatPrice').value);
-                if (code && spec && !isNaN(price)) {
-                    stampingMaterialsData.push({ id: generateId(), MaterialCode: code, Type: type, Spec: spec, Thickness: 1.0, Density: 7.85, UnitPrice: price });
-                    saveAll(); refreshMaterialPreview(); renderMaterialModal(); calculate();
-                    showToast("材料已添加");
-                    document.getElementById('newMatCode').value = '';
-                    document.getElementById('newMatSpec').value = '';
-                    document.getElementById('newMatPrice').value = '';
-                } else alert("请完整填写");
-            };
-            // 设备库
-            document.getElementById('openEquipmentModalBtn').onclick = () => { renderEquipmentModal(); document.getElementById('equipmentModal').style.display = 'flex'; };
-            document.getElementById('closeEquipmentModal').onclick = () => document.getElementById('equipmentModal').style.display = 'none';
-            document.getElementById('addEquipmentBtn').onclick = () => {
-                let ton = parseFloat(document.getElementById('newEqTonnage').value);
-                let rate = parseFloat(document.getElementById('newEqRate').value);
-                let spm = parseFloat(document.getElementById('newEqSpm').value);
-                if (!isNaN(ton) && !isNaN(rate) && !isNaN(spm) && ton > 0 && rate > 0 && spm > 0) {
-                    equipmentData.push({ id: generateId(), tonnage: ton, hourlyRate: rate, spm: spm });
-                    saveAll(); refreshEquipmentPreview(); renderEquipmentModal(); calculate();
-                    showToast("设备已添加");
-                    document.getElementById('newEqTonnage').value = '';
-                    document.getElementById('newEqRate').value = '';
-                    document.getElementById('newEqSpm').value = '';
-                } else alert("请填写有效正数");
-            };
-            // 反馈
-            document.getElementById('feedbackBtn').onclick = () => document.getElementById('feedbackModal').style.display = 'flex';
-            document.getElementById('viewFeedbackBtn').onclick = () => { renderFeedbackList(); document.getElementById('viewFeedbackModal').style.display = 'flex'; };
-            document.getElementById('closeFeedbackModal').onclick = () => document.getElementById('feedbackModal').style.display = 'none';
-            document.getElementById('cancelFeedbackBtn').onclick = () => document.getElementById('feedbackModal').style.display = 'none';
-            document.getElementById('submitFeedbackBtn').onclick = () => {
-                let content = document.getElementById('feedbackContent').value.trim();
-                if (!content) { alert("请输入内容"); return; }
-                addFeedback(content);
-                document.getElementById('feedbackModal').style.display = 'none';
-                document.getElementById('feedbackContent').value = '';
-            };
-            document.getElementById('closeViewModal').onclick = () => document.getElementById('viewFeedbackModal').style.display = 'none';
-            document.getElementById('clearAllFeedbackBtn').onclick = () => { feedbackList = []; saveAll(); renderFeedbackList(); showToast("已清空"); };
-            document.getElementById('exportFeedbackBtn').onclick = exportFeedbackCSV;
-            window.onclick = (e) => { if (e.target.classList.contains('modal')) e.target.style.display = 'none'; };
-            document.getElementById('collapseHeader')?.addEventListener('click', () => document.getElementById('collapseContent')?.classList.toggle('show'));
-            document.getElementById('historyHeader')?.addEventListener('click', () => document.getElementById('historyContent')?.classList.toggle('show'));
-            calculate();
-            showToast("冲压件模型 V4.4 已加载");
-        }
-        function escapeHtml(s) { return s.replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[m]); }
-        init();
-    </script>
+    <script src="app.js"></script>
 </body>
 
 </html>

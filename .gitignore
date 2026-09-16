@@ -1,0 +1,26 @@
+# 依赖（本项目零依赖，此条为将来预留）
+node_modules/
+package-lock.json
+pnpm-lock.yaml
+yarn.lock
+
+# 与「汽车成本计算工具箱」无关的本机脚本（DSH 平台健康检查）
+check-dsh.ps1
+
+# 系统 / 编辑器
+.DS_Store
+Thumbs.db
+desktop.ini
+.idea/
+.vscode/
+*.swp
+
+# 临时 / 部署产物
+*.tmp
+*.log
+_deploy/
+dist/
+
+# 商业策略类文档 —— 刻意不公开（含营收预测、竞争判断、在职/竞业风险讨论）
+汽车成本工具-市场前景分析.md
+商业策略*.md

@@ -5,35 +5,30 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>汽车成本计算工具箱</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             font-family: 'Inter', system-ui, -apple-system, sans-serif;
             min-height: 100vh;
             padding: 40px 20px;
         }
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-        .header {
-            text-align: center;
-            margin-bottom: 60px;
+        .container { max-width: 1200px; margin: 0 auto; }
+        .header { text-align: center; margin-bottom: 40px; color: white; }
+        .header h1 { font-size: 2.5rem; margin-bottom: 16px; text-shadow: 2px 2px 4px rgba(0,0,0,0.2); }
+        .header p { font-size: 1rem; opacity: 0.9; }
+        .header .sub { margin-top: 10px; font-size: 0.85rem; opacity: 0.8; }
+        .notice {
+            background: rgba(255,255,255,0.15);
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 16px;
+            padding: 14px 20px;
             color: white;
+            font-size: 0.82rem;
+            line-height: 1.65;
+            margin-bottom: 32px;
+            backdrop-filter: blur(4px);
         }
-        .header h1 {
-            font-size: 2.5rem;
-            margin-bottom: 16px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
-        }
-        .header p {
-            font-size: 1rem;
-            opacity: 0.9;
-        }
+        .notice strong { color: #fde68a; }
         .tool-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
@@ -51,67 +46,38 @@
             position: relative;
             overflow: hidden;
         }
-        .tool-card:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 20px 40px -10px rgba(0,0,0,0.2);
+        .tool-card:hover { transform: translateY(-8px); box-shadow: 0 20px 40px -10px rgba(0,0,0,0.2); }
+        .tool-card.disabled { cursor: not-allowed; opacity: 0.72; }
+        .tool-card.disabled:hover { transform: none; }
+        .tool-icon { font-size: 44px; margin-bottom: 14px; }
+        .tool-title { font-size: 1.4rem; font-weight: 600; margin-bottom: 8px; color: #2563eb; }
+        .tool-desc { color: #5b6e8c; font-size: 0.85rem; line-height: 1.6; margin-bottom: 14px; }
+        .tool-feats { list-style: none; margin: 0 0 16px 0; padding: 0; }
+        .tool-feats li {
+            font-size: 0.76rem; color: #475569; line-height: 1.75;
+            padding-left: 16px; position: relative;
         }
-        .tool-card.disabled {
-            cursor: not-allowed;
-            opacity: 0.7;
+        .tool-feats li::before {
+            content: '·'; position: absolute; left: 4px; color: #3b82f6; font-weight: 700;
         }
-        .tool-card.disabled:hover {
-            transform: none;
-        }
-        .tool-icon {
-            font-size: 48px;
-            margin-bottom: 16px;
-        }
-        .tool-title {
-            font-size: 1.5rem;
-            font-weight: 600;
-            margin-bottom: 8px;
-            color: #2563eb;
-        }
-        .tool-desc {
-            color: #5b6e8c;
-            font-size: 0.85rem;
-            line-height: 1.5;
-            margin-bottom: 16px;
-        }
-        .tool-status {
-            display: inline-block;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.7rem;
-            font-weight: 600;
-        }
+        .tool-status { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 0.7rem; font-weight: 600; }
         .status-ready { background: #dcfce7; color: #15803d; }
         .status-coming { background: #fef3c7; color: #b45309; }
-        .status-beta { background: #dbeafe; color: #1e40af; }
         .tool-version {
-            font-size: 0.65rem;
-            color: #94a3b8;
-            margin-top: 12px;
-            padding-top: 12px;
-            border-top: 1px solid #e2e8f0;
-        }
-        .footer {
-            text-align: center;
-            margin-top: 60px;
-            color: white;
-            font-size: 0.8rem;
-            opacity: 0.7;
+            font-size: 0.65rem; color: #94a3b8; margin-top: 12px;
+            padding-top: 12px; border-top: 1px solid #e2e8f0;
         }
         .update-badge {
-            position: absolute;
-            top: 12px;
-            right: 12px;
-            background: #10b981;
-            color: white;
-            font-size: 0.6rem;
-            padding: 2px 8px;
-            border-radius: 20px;
+            position: absolute; top: 12px; right: 12px;
+            background: #10b981; color: white; font-size: 0.6rem;
+            padding: 2px 8px; border-radius: 20px;
         }
+        .section-h {
+            color: white; font-size: 1.05rem; font-weight: 600;
+            margin: 48px 0 18px 0; opacity: 0.95;
+        }
+        .footer { text-align: center; margin-top: 48px; color: white; font-size: 0.78rem; opacity: 0.75; line-height: 1.9; }
+        .footer a { color: #fde68a; }
         @media (max-width: 768px) {
             .header h1 { font-size: 1.8rem; }
             .tool-grid { grid-template-columns: 1fr; }
@@ -122,60 +88,106 @@
     <div class="container">
         <div class="header">
             <h1>🚗 汽车成本计算工具箱</h1>
-            <p>专业、精准、易用 · 汽车工程师的成本助手</p>
+            <p>把成本工程师的经验，变成可复用、可审计、可带走的工具</p>
+            <p class="sub">供应商报价 · 主机厂核价 · 研发设计估算</p>
         </div>
-        
+
+        <div class="notice">
+            <strong>🔒 数据不出本机</strong> —— 全部计算在浏览器内完成，<strong>不依赖任何外部 CDN、不上传任何数据</strong>，
+            可在离线环境与企业内网使用。<br>
+            <strong>💾 参数库可备份</strong> —— 材料价格、设备费率、工艺判例存在本机；换电脑用「导出备份 / 导入备份」一键迁移。
+        </div>
+
         <div class="tool-grid">
-            <!-- 注塑件 - 已上线 -->
+            <!-- 注塑件 -->
             <a href="injection/index.html" class="tool-card">
                 <div class="tool-icon">🏭</div>
                 <div class="tool-title">注塑件成本模型</div>
-                <div class="tool-desc">塑料零件注塑成型成本估算，支持材料/模具/制造费用配置，包含详细计算明细和Excel导出</div>
+                <div class="tool-desc">塑料件注塑成型成本估算，从材料费到含税报价全链路拆解</div>
+                <ul class="tool-feats">
+                    <li>双模式重量：精确净重 / 几何估算（研发阶段无 3D 数模也能算）</li>
+                    <li>模具费 7 项构成明细：模架、型腔、滑块、斜顶、热流道、设计试模</li>
+                    <li>4 种物流模式：通用零担 / 供应商直送 / Milk-run / RDC</li>
+                    <li>模具支付三模式：供应商全付 / 主机厂全付 / 按比例分摊</li>
+                    <li>管理费率、利润率、税率、废料价全部可配置</li>
+                    <li><strong>费率预设</strong>：华东高自动化 / 华东通用 / 华南 / 华北 / 内陆低成本，一键切换整套费率</li>
+                    <li><strong>材料价格批量导入</strong>：粘贴一张价格表，3 分钟刷新整个材料库</li>
+                    <li>一键导出 Excel 成本报告（含计算明细与来源水印）</li>
+                    <li>输入校验与告警：参数不合理时明确提示，不静默算错</li>
+                </ul>
                 <span class="tool-status status-ready">✅ 已上线</span>
-                <div class="tool-version">版本 V1.5 | 支持双模式重量计算</div>
+                <div class="tool-version">V2.0 · 成本引擎化重构 · 参数库 / 报表导出 / 离线可用</div>
+                <div class="update-badge">NEW</div>
             </a>
-            
-            <!-- 冲压件 - 已上线 -->
+
+            <!-- 冲压件 -->
             <a href="stamping/index.html" class="tool-card">
                 <div class="tool-icon">⚙️</div>
                 <div class="tool-title">冲压件成本模型</div>
-                <div class="tool-desc">钣金零件冲压成型成本估算，支持冲焊总成BOM、多厚度计算、废料回收、焊接配置</div>
+                <div class="tool-desc">钣金件与冲焊总成成本估算，支持多层级 BOM 逐零件核算</div>
+                <ul class="tool-feats">
+                    <li>层级 BOM：总成 → 子件逐级展开，各件独立材料/厚度/工序</li>
+                    <li><strong>净重 / 下料毛重双口径</strong>：材料按毛重计费，废料按真实差值回收</li>
+                    <li>工序级冲次成本：按设备吨位自动匹配机时费率与 SPM</li>
+                    <li>焊接关系编辑器：点焊 / MIG / 激光，按子件数量自动放大</li>
+                    <li>工艺判例库：按尺寸与材料匹配相似件，一键套用工序配置</li>
+                    <li>历史快照：手动保存测算结果用于方案对比</li>
+                    <li><strong>费率预设</strong>与<strong>板材价格批量导入</strong>（同注塑件）</li>
+                    <li>一键导出 Excel 成本报告（含计算明细与来源水印）</li>
+                </ul>
                 <span class="tool-status status-ready">✅ 已上线</span>
-                <div class="tool-version">版本 V2.0 | 新增BOM表多厚度支持</div>
+                <div class="tool-version">V2.0 · 净重毛重双口径 · 焊接按量计算 · 参数库 / 报表导出</div>
                 <div class="update-badge">NEW</div>
             </a>
-            
-            <!-- 压铸件 - 开发中 -->
+
+            <!-- 压铸件 -->
             <div class="tool-card disabled">
                 <div class="tool-icon">🔥</div>
                 <div class="tool-title">压铸件成本模型</div>
-                <div class="tool-desc">铝/锌合金压铸成本估算，支持不同压铸机型号和模具寿命</div>
+                <div class="tool-desc">铝/锌合金压铸成本估算，支持不同压铸机吨位与模具寿命</div>
+                <ul class="tool-feats">
+                    <li>已规划：与注塑/冲压共用同一套成本引擎</li>
+                    <li>一体压铸（大型结构件）单独建模</li>
+                </ul>
                 <span class="tool-status status-coming">🔄 开发中</span>
-                <div class="tool-version">预计 V2.5 上线</div>
+                <div class="tool-version">计划中</div>
             </div>
-            
-            <!-- 表面处理 - 开发中 -->
-            <div class="tool-card disabled">
-                <div class="tool-icon">🎨</div>
-                <div class="tool-title">表面处理成本模型</div>
-                <div class="tool-desc">喷漆/电镀/皮纹/IMD等表面处理成本估算</div>
-                <span class="tool-status status-coming">🔄 开发中</span>
-                <div class="tool-version">预计 V2.5 上线</div>
-            </div>
-            
-            <!-- BOM成本汇总 - 规划中 -->
+
+            <!-- BOM 汇总与价格库 -->
             <div class="tool-card disabled">
                 <div class="tool-icon">📊</div>
-                <div class="tool-title">BOM成本汇总工具</div>
-                <div class="tool-desc">整合各零件成本，生成完整BOM成本报表</div>
+                <div class="tool-title">BOM 成本汇总 & 外购件价格库</div>
+                <div class="tool-desc">导入 BOM，自动匹配各零件成本模型，生成整车级成本报表</div>
+                <ul class="tool-feats">
+                    <li>自制件算成本，外购件查价格——两类零件分开处理</li>
+                    <li>帕累托排序：一眼看出哪 20% 的零件占了 80% 成本</li>
+                    <li>设计变更 Δ 成本对比：改这里到底省多少</li>
+                    <li>外购件价格库：中国供应链实价，持续更新</li>
+                </ul>
                 <span class="tool-status status-coming">📋 规划中</span>
-                <div class="tool-version">预计 V3.0 上线</div>
+                <div class="tool-version">研发估算模式的核心入口</div>
             </div>
         </div>
-        
+
+        <div class="section-h">🎯 两条使用路径</div>
+        <div class="notice">
+            <strong>会调的人</strong>：直接改管理费率、利润率、模具单价、材料价格 —— 精确贴合本公司。<br>
+            <strong>不会调 / 懒得调的人</strong>：选一个「费率预设」档位，再用「批量导入价」粘贴一张价格表 ——
+            10 分钟内得到可信的量级估算。
+        </div>
+
+        <div class="section-h">🧭 路线图</div>
+        <div class="notice">
+            <strong>已完成</strong>：成本引擎（7 大成本块）· 统一参数库与备份 · 离线化（去 CDN）· Excel 报表导出 ·
+            输入校验与告警 · 费率预设 · 材料价格批量导入<br>
+            <strong>开发中</strong>：敏感度分析（哪个参数动了最致命）· 账期资金占用测算 · 年降曲线模拟 · 判例库导出/导入<br>
+            <strong>规划中</strong>：压铸件模型 · BOM 批量导入与整车级成本汇总 · 外购件价格库
+        </div>
+
         <div class="footer">
-            <p>💡 提示：点击「注塑件成本模型」或「冲压件成本模型」进入工具 | 数据存储在本地浏览器中，安全可靠</p>
-            <p style="margin-top: 12px;">© 2025 汽车成本计算工具箱 | 反馈建议请在工具内提交 | 持续更新中</p>
+            <p>💡 点击「注塑件成本模型」或「冲压件成本模型」进入工具</p>
+            <p>全部计算在本机浏览器完成，无 CDN 依赖、无数据上传，可在离线/内网环境使用</p>
+            <p style="margin-top: 12px;">© 2025–2026 汽车成本计算工具箱 · 持续更新中</p>
         </div>
     </div>
 </body>

@@ -1,0 +1,17 @@
+{
+  "name": "cost-model",
+  "version": "2.0.0",
+  "private": true,
+  "description": "汽车成本计算工具箱 —— 注塑件 / 冲压件成本估算，供应商报价 · 主机厂核价 · 研发估算",
+  "scripts": {
+    "test": "node tools/test-engine.js && node tools/test-db.js && node tools/check-dom.js",
+    "test:engine": "node tools/test-engine.js",
+    "test:db": "node tools/test-db.js",
+    "check": "node tools/check-dom.js",
+    "test:dom": "node tools/smoke-dom.js",
+    "test:all": "npm test && npm run test:dom",
+    "serve": "npx --yes serve ."
+  },
+  "keywords": ["automotive", "cost-engineering", "should-cost", "quoting"],
+  "license": "UNLICENSED"
+}
