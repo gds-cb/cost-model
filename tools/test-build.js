@@ -182,7 +182,74 @@ section('组合场景');
 }
 
 /* ============================================================
- * 7. 真实构建（端到端）
+ * 7. 工艺价格库与会员门禁
+ * ============================================================ */
+section('工艺价格库');
+const CRAFT = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'craft-prices.json'), 'utf8'));
+{
+    ok(CRAFT.items.length > 0, '有工艺条目', '实际 ' + CRAFT.items.length);
+
+    eq(CRAFT.items.filter(i => !CRAFT.categories[i.category]).length, 0,
+        '每项的 category 都在 categories 中定义');
+
+    eq(CRAFT.items.filter(i => i.visibility !== 'public' && i.visibility !== 'member').length, 0,
+        'visibility 只能是 public 或 member');
+
+    const codes = CRAFT.items.map(i => i.code);
+    eq(codes.filter((c, i) => codes.indexOf(c) !== i).length, 0, 'code 无重复');
+
+    eq(CRAFT.items.filter(i => !i.unit).length, 0, '每项都有计价单位');
+    eq(CRAFT.items.filter(i => !i.basis).length, 0, '每项都有计价基准（这是这个库的核心价值）');
+    eq(CRAFT.items.filter(i => !i.name).length, 0, '每项都有名称');
+}
+{
+    // ⭐ 公开数据必须自洽：冲压冲次费 = 机时费率 ÷ (SPM × 60)
+    // 如果和工具里的设备费率表对不上，客户一算就发现矛盾
+    const DB = require('../assets/cost-db.js');
+    const eqs = DB.DEFAULTS.equipment.filter(e => e.kind === 'stamping');
+    const mismatch = [];
+    CRAFT.items.filter(i => i.code.indexOf('ST-STROKE-') === 0).forEach(it => {
+        const ton = parseInt(it.code.replace('ST-STROKE-', ''), 10);
+        const eq = eqs.filter(e => e.tonnage === ton)[0];
+        if (!eq) { mismatch.push(it.code + '（找不到对应设备）'); return; }
+        const expect = eq.hourlyRate / (eq.spm * 60);
+        if (Math.abs(expect - it.unitPrice) > 0.0001) {
+            mismatch.push(it.code + ' 应为 ' + expect.toFixed(4) + '，实际 ' + it.unitPrice);
+        }
+    });
+    ok(mismatch.length === 0, '冲压冲次费与设备费率表推算一致'
+        + (mismatch.length ? '：' + mismatch.join('；') : ''), mismatch.join('；'));
+}
+{
+    // 门禁核心：会员价格绝不能出现在公开版 HTML 里
+    const FAKE = { 'SF-CED': 12.34, 'CA-STEEL-BLANK': 7.89 };
+    const pub = B.buildCraft(CRAFT, {}, { localPrices: FAKE });
+    notHas(pub.html, '12.34', '公开版不泄露会员价格 SF-CED');
+    notHas(pub.html, '7.89', '公开版不泄露会员价格 CA-STEEL-BLANK');
+    has(pub.html, '🔒 会员可见', '公开版显示锁定标记');
+    has(pub.html, '解锁会员区', '公开版有会员 CTA');
+    has(pub.html, 'data/site.json', '未配置联系方式时提示去哪里配');
+
+    const mem = B.buildCraft(CRAFT, {}, { unlock: true, localPrices: FAKE });
+    has(mem.html, '12.34', '会员版包含会员价格');
+    notHas(mem.html, '🔒 会员可见', '会员版无锁定标记');
+    notHas(mem.html, '解锁会员区', '会员版无 CTA');
+
+    ok(pub.memberCount > 0, '存在会员专属条目', '实际 ' + pub.memberCount + ' 项');
+    eq(pub.count, pub.publicCount + pub.memberCount, '公开项 + 会员项 = 总项数');
+}
+{
+    // 联系方式配置后，CTA 应显示对应渠道
+    const site = { memberCta: { wechat: 'test_wx', formUrl: 'https://e.com/f', email: 'a@b.com' } };
+    const r = B.buildCraft(CRAFT, site, {});
+    has(r.html, 'test_wx', 'CTA 显示微信号');
+    has(r.html, 'https://e.com/f', 'CTA 显示表单链接');
+    has(r.html, 'mailto:a@b.com', 'CTA 显示邮箱');
+    notHas(r.html, 'data/site.json', '已配置时不显示「去哪里配」提示');
+}
+
+/* ============================================================
+ * 8. 真实构建（端到端）
  * ============================================================ */
 section('真实构建');
 {

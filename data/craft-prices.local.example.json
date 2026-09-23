@@ -1,0 +1,28 @@
+{
+  "_说明": "这是「会员区经验价格」的填写模板。复制本文件为 data/craft-prices.local.json 后填写。",
+  "_为什么不直接填在 craft-prices.json": "因为那个文件会提交到公开仓库。会员区的价格是你的经验资产，放本地文件里，构建时临时合并。",
+  "_生成会员版": "填完后运行：node tools/build-site.js --member   会在 _member/ 目录生成解锁后的页面（该目录同样不进仓库）。",
+  "_格式": "prices 的键 = data/craft-prices.json 里每个条目的 code；值 = 单价数字（不要带单位）。不填的项在页面上显示「待补充」。",
+
+  "_待填清单": [
+    "SF-CED — 阴极电泳（元/m²）",
+    "SF-VACUUM-AL — 真空镀铝（元/m²）",
+    "SF-SOFT-WRAP — 软包覆（元/m²）",
+    "SF-UV-CURE — UV 硬化（元/m²）",
+    "CA-ADC12-BLANK — 压铸件毛坯 ADC12（元/kg）",
+    "CA-A380-BLANK — 压铸件毛坯 A380（元/kg）",
+    "CA-STEEL-BLANK — 铸钢件毛坯（元/kg）",
+    "CA-GRAY-IRON-BLANK — 灰铸铁 HT250 毛坯（元/kg）",
+    "CA-DUCTILE-IRON-BLANK — 球墨铸铁 QT450 毛坯（元/kg）",
+    "HA-CONNECTOR-DOM — 插接件 国产通用（元/个）",
+    "HA-CONNECTOR-JV — 插接件 合资/进口（元/个）",
+    "HA-TERMINAL — 端子（元/个）",
+    "HA-WIRE-FLRY — 导线 FLRY-B 0.5mm²（元/米）",
+    "HA-CORRUGATED-TUBE — 波纹管（元/米）",
+    "HA-TAPE — 线束胶带（元/米）",
+    "MA-CNC-3AXIS — CNC 三轴（元/h）",
+    "MA-CNC-5AXIS — CNC 五轴（元/h）"
+  ],
+
+  "prices": {}
+}

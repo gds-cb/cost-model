@@ -91,6 +91,10 @@ table.data a.code-link:hover { text-decoration: underline; }
 }
 .tag.sheet { background: #e0edff; color: #1d4ed8; }
 .tag.polymer { background: #dcfce7; color: #15803d; }
+.tag.rubber { background: #f3e8ff; color: #7c3aed; }
+.tag.glass { background: #cffafe; color: #0e7490; }
+.tag.metal { background: #ffedd5; color: #c2410c; }
+.tag.part { background: #e2e8f0; color: #334155; }
 .tag.other { background: #fef3c7; color: #b45309; }
 
 /* ============ 文章 ============ */
@@ -146,6 +150,52 @@ table.data a.code-link:hover { text-decoration: underline; }
 .site-footer a:hover { text-decoration: underline; }
 
 .empty { text-align: center; color: #94a3b8; padding: 48px 20px; font-size: 0.88rem; }
+
+/* ============ 工艺价格库：分组标题 ============ */
+.group-h {
+    font-size: 1.05rem; margin: 30px 0 12px; padding-left: 12px;
+    border-left: 4px solid #3b82f6; display: flex; align-items: baseline; gap: 10px;
+}
+.group-n { font-size: 0.75rem; color: #94a3b8; font-weight: 400; }
+.cell-note { color: #94a3b8; font-size: 0.76rem; }
+
+/* ============ 会员门禁 ============ */
+table.data tr.locked { background: #fcfcfd; }
+table.data tr.locked td { color: #64748b; }
+table.data tr.locked:hover { background: #f8fafc; }
+table.data .price.locked {
+    color: #a78bfa; font-weight: 600; font-size: 0.78rem; white-space: nowrap;
+}
+.lock-tag {
+    display: inline-block; margin-left: 6px; padding: 1px 7px; border-radius: 10px;
+    font-size: 0.62rem; font-weight: 600; background: #ede9fe; color: #6d28d9;
+    vertical-align: 1px;
+}
+
+/* ============ 会员 CTA ============ */
+.cta {
+    margin: 34px 0 0; padding: 24px 26px; border-radius: 18px;
+    background: linear-gradient(135deg, #eef2ff 0%, #f5f3ff 100%);
+    border: 1px solid #ddd6fe;
+}
+.cta h3 { font-size: 1.1rem; color: #4338ca; margin-bottom: 10px; display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.cta-n {
+    font-size: 0.72rem; font-weight: 600; background: #ddd6fe; color: #5b21b6;
+    padding: 2px 10px; border-radius: 20px;
+}
+.cta p { font-size: 0.85rem; color: #4c1d95; opacity: .85; line-height: 1.8; }
+.cta-ways { list-style: none; margin: 14px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 10px; }
+.cta-ways li {
+    background: #fff; border: 1px solid #ddd6fe; border-radius: 11px;
+    padding: 9px 16px; font-size: 0.84rem; color: #4c1d95;
+}
+.cta-ways a { color: #6d28d9; text-decoration: none; }
+.cta-ways a:hover { text-decoration: underline; }
+.cta-todo {
+    margin-top: 12px; font-size: 0.78rem !important; color: #7c3aed !important;
+    background: #fff; border-radius: 10px; padding: 10px 14px; display: inline-block;
+}
+.cta-todo code { background: #f3e8ff; padding: 1px 5px; border-radius: 4px; }
 
 @media (max-width: 720px) {
     .page-head h1 { font-size: 1.4rem; }

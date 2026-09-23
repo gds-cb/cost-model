@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>整车成本控制是怎么做的：六个阶段一条链 · 汽车成本工具箱</title>
+<meta name="description" content="从售价配置确认，到整车目标成本、零部件目标分解、方案成本预估、VAVE 达成、商务落地——整车成本控制是一条六段接力链。任何一段断了，后面的数都不可信。">
+<link rel="canonical" href="https://gds-cb.github.io/cost-model/kb/vehicle-cost-control.html">
+<link rel="stylesheet" href="../assets/site.css">
+</head>
+<body>
+<header class="site-header"><div class="wrap"><a class="brand" href="../index.html">🚗 汽车成本工具箱<span>成本与供应链</span></a><nav class="site-nav"><a href="../index.html">首页</a><a href="../materials/index.html">材料价格库</a><a href="../craft/index.html">工艺价格库</a><a href="../kb/index.html" class="active">知识库</a><a href="../injection/index.html">注塑件工具</a><a href="../stamping/index.html">冲压件工具</a></nav></div></header>
+<main class="wrap">
+<div class="page-head"><p style="font-size:.8rem;color:#94a3b8;margin-bottom:6px;"><a href="index.html" style="color:#2563eb;text-decoration:none;">← 知识库</a></p><h1>整车成本控制是怎么做的：六个阶段一条链</h1><p class="lead" style="font-size:.8rem;color:#94a3b8;">2026-03-05 · #整车成本 · #目标成本 · #VAVE · #方法论</p></div><article class="prose"><h2>为什么需要一套流程</h2>
+<p>很多成本工程师的日常工作是这样的：拿到一张图纸或者一份报价，算一个数，报上去。</p>
+<p><strong>但那个数是从哪来的？为什么要控制在这个数？超出了怎么办？</strong></p>
+<p>这些问题的答案不在零件层面，在<strong>整车层面</strong>。整车成本控制不是&quot;把每个零件算准&quot;，而是<strong>一条从市场倒推到单个零件的链条</strong>。</p>
+<p>链条是这六段：</p>
+<table><thead><tr><th>#</th><th>阶段</th><th>一句话</th></tr></thead><tbody><tr><td>1</td><td><strong>售价配置确认</strong></td><td>这车卖给谁、卖多少钱、有什么配置</td></tr><tr><td>2</td><td><strong>整车目标成本确认</strong></td><td>从售价倒推：整车最多能花多少钱</td></tr><tr><td>3</td><td><strong>分解零部件目标</strong></td><td>把整车目标拆到每个系统、每个零件</td></tr><tr><td>4</td><td><strong>初步方案成本预估</strong></td><td>这个设计方案，大概要花多少</td></tr><tr><td>5</td><td><strong>VAVE 方案成本达成</strong></td><td>差距怎么补：价值工程与价值分析</td></tr><tr><td>6</td><td><strong>零部件目标商务达成</strong></td><td>谈下来、定下来、写进合同</td></tr></tbody></table>
+<p><strong>关键认知</strong>：这六段是<strong>接力</strong>，不是并列。</p>
+<ul><li>第 1 段错了 → 后面全错（目标定高了浪费，定低了做不出来）</li><li>第 3 段粗了 → 第 5 段永远补不上</li><li>第 6 段松了 → 前面所有努力白费</li></ul>
+<p>下面逐段拆。</p>
+<hr>
+<h2>阶段一：售价配置确认</h2>
+<p><strong>这是在定&quot;天花板&quot;。</strong></p>
+<p>一台车能花多少成本，不由工程师决定，由<strong>市场</strong>决定。</p>
+<h3>输入</h3>
+<ul><li>市场定位（A0 / A / B / C 级，什么人群）</li><li>竞品价格带（同级别卖多少钱）</li><li><strong>配置表</strong>（有哪些功能、什么级别）</li></ul>
+<h3>动作</h3>
+<ol><li>确定<strong>配置清单</strong>：这车要有什么、什么档次</li></ol>
+<ul><li>有没有天窗？普通天窗还是全景？</li><li>座椅是织物、仿皮还是真皮？</li><li>有没有 L2 辅助驾驶？几个摄像头几个雷达？</li></ul>
+<ol><li>确定<strong>建议零售价（MSRP）</strong></li><li>预测<strong>销量</strong>（销量直接决定模具摊销、采购议价能力）</li></ol>
+<h3>输出</h3>
+<p><strong>售价 × 销量预测 + 配置表</strong></p>
+<h3>⚠️ 这一段最常踩的坑</h3>
+<blockquote><p><strong>配置表后期变更。</strong></p></blockquote>
+<p>配置表是所有成本工作的<strong>基准</strong>。如果配置在开发中途改了（加个功能、换个材质）， 整个成本链条都要重算——而现实中，配置变更几乎是必然发生的。</p>
+<p><strong>所以真正专业的做法是</strong>：在配置确认阶段就把<strong>配置变更的成本影响机制</strong>定下来。 每一条配置都要能回答&quot;加这个功能，成本增加多少&quot;。</p>
+<h3>配置表 ⇄ 成本表的双向映射</h3>
+<p>一个成熟的做法是维护一张<strong>配置-成本映射表</strong>：</p>
+<table><thead><tr><th>配置项</th><th>选项</th><th>增量成本</th></tr></thead><tbody><tr><td>天窗</td><td>无 / 普通 / 全景</td><td>0 / +X / +Y</td></tr><tr><td>座椅</td><td>织物 / 仿皮 / 真皮</td><td>0 / +X / +Y</td></tr><tr><td>辅助驾驶</td><td>无 / L1 / L2 / L2+</td><td>0 / +X / +Y / +Z</td></tr></tbody></table>
+<p><strong>有了这张表，配置变更就是一次加法，而不是一次重算。</strong></p>
+<hr>
+<h2>阶段二：整车目标成本确认</h2>
+<p><strong>这是从&quot;售价&quot;倒推到&quot;成本&quot;。</strong></p>
+<h3>输入</h3>
+<ul><li>售价（阶段一）</li><li>销量预测（阶段一）</li><li>竞品对标数据</li></ul>
+<h3>动作</h3>
+<p>从售价往下一层层扣：</p>
+<pre><code>建议零售价（MSRP）
+  − 经销商/渠道费用
+  − 增值税、消费税等税费
+  − 厂家目标利润
+  ────────────────────────
+  = 整车目标成本（出厂成本口径）</code></pre>
+<h3>竞品对标怎么用</h3>
+<p>对标不是为了抄，是为了<strong>校准</strong>：</p>
+<table><thead><tr><th>对标方式</th><th>得到什么</th><th>难度</th></tr></thead><tbody><tr><td><strong>拆解对标（Teardown）</strong></td><td>竞品每个零件的实物结构、材料、工艺</td><td>高（要买车、要拆）</td></tr><tr><td><strong>成本结构对标</strong></td><td>竞品各系统的成本占比</td><td>中</td></tr><tr><td><strong>参数对标</strong></td><td>同级别车的重量、尺寸、配置对应成本</td><td>低</td></tr></tbody></table>
+<p><strong>对标的核心结论往往是一句话</strong>：</p>
+<blockquote><p>&quot;同级别、同配置的车，行业平均整车成本是 X，我们目标定在 X 的 95%，意味着要在哪几个系统上做到领先。&quot;</p></blockquote>
+<h3>输出</h3>
+<p><strong>整车目标成本</strong>（以及初步的系统级分解）</p>
+<h3>⚠️ 这一段最常踩的坑</h3>
+<blockquote><p><strong>目标定得不切实际。</strong></p></blockquote>
+<ul><li><strong>定太松</strong> → 供应商报价全都&quot;达标&quot;，公司白丢利润</li><li><strong>定太紧</strong> → 项目后期疯狂砍配置，或者供应商亏本接单后偷工减料</li></ul>
+<p><strong>判断标准</strong>：目标成本应该是&quot;跳一跳够得着&quot;。如果一个目标需要靠&quot;供应商让利&quot;才能达成， 那它就不是成本目标，是谈判目标——<strong>两者必须分开</strong>。</p>
+<hr>
+<h2>阶段三：分解零部件目标</h2>
+<p><strong>这是整个链条里最考验功力的一段。</strong></p>
+<p>整车目标成本是一个总数，但真正要落地，必须拆到每一个零件。</p>
+<h3>分解的层级</h3>
+<pre><code>整车
+ └─ 系统（动力、底盘、车身、内外饰、电子电气…）
+     └─ 总成（前门总成、仪表板总成…）
+         └─ 零部件（门内板、骨架、饰条…）</code></pre>
+<h3>四种分解方法（要混着用）</h3>
+<table><thead><tr><th>方法</th><th>怎么做</th><th>适用</th></tr></thead><tbody><tr><td><strong>历史结构法</strong></td><td>参照上一代车型的成本结构比例</td><td>改款车型</td></tr><tr><td><strong>竞品拆解法</strong></td><td>用拆解对标的成本数据反推</td><td>全新车型</td></tr><tr><td><strong>功能价值法</strong></td><td>按功能重要性分配成本（客户感知强的多给）</td><td>差异化配置</td></tr><tr><td><strong>自下而上法</strong></td><td>每个零件独立估算后再汇总校验</td><td>关键零件</td></tr></tbody></table>
+<h3>⚠️ 这一段最常踩的坑</h3>
+<blockquote><p><strong>只按比例分摊，不考虑零件实际差异。</strong></p></blockquote>
+<p>最简单的做法是&quot;上个车型这个零件占 3%，这个车型总成本降 5%，那它也降 5%&quot;。<strong>这是最偷懒也最危险的做法。</strong></p>
+<p>因为零件的成本驱动因素完全不同：</p>
+<ul><li>钢材涨价 → 钣金件成本上升，塑料件不受影响</li><li>芯片涨价 → 电子件上升，结构件不受影响</li><li>人工涨价 → 劳动密集件（线束、装配）上升，注塑件影响小</li></ul>
+<p><strong>正确的做法</strong>：分解时要同时给出<strong>成本驱动因子</strong>，而不只是一个数字。</p>
+<table><thead><tr><th>零件</th><th>目标成本</th><th>主要驱动因子</th><th>敏感度</th></tr></thead><tbody><tr><td>前门内板</td><td>82 元</td><td>钢材价格、模具摊销</td><td>钢价 ±10% → 成本 ±4%</td></tr><tr><td>仪表板骨架</td><td>45 元</td><td>塑料价格、成型周期</td><td>塑价 ±10% → 成本 ±6%</td></tr><tr><td>线束总成</td><td>320 元</td><td>铜价、人工</td><td>铜价 ±10% → 成本 ±5%</td></tr></tbody></table>
+<p><strong>有了驱动因子，第 5 阶段的 VAVE 才有抓手。</strong></p>
+<hr>
+<h2>阶段四：初步方案成本预估</h2>
+<p><strong>设计方案出来了，但它要花多少钱？</strong></p>
+<h3>输入</h3>
+<ul><li>概念设计方案（CAS / 效果图 / 初步结构）</li><li>阶段三给出的零件目标成本</li></ul>
+<h3>动作</h3>
+<p>按设计方案做成本估算。<strong>这个阶段的输入是不完整的</strong>——没有详细图纸、没有工艺路线、甚至尺寸都还在变。</p>
+<p>所以要用<strong>参数化估算</strong>：</p>
+<table><thead><tr><th>精度档</th><th>输入</th><th>误差</th><th>用在</th></tr></thead><tbody><tr><td><strong>L1 参数化</strong></td><td>只有尺寸/重量/品类</td><td>±20~30%</td><td>概念阶段</td></tr><tr><td><strong>L2 简化路线</strong></td><td>品类 + 主要工序</td><td>±10~15%</td><td>设计定型</td></tr><tr><td><strong>L3 完整参数</strong></td><td>全工艺/设备/模具/物流</td><td>±5%</td><td>报价/核价</td></tr></tbody></table>
+<p><strong>这个阶段用 L1 就够了</strong>——它的目的不是算准，是<strong>尽早发现&quot;这个方案根本达不到目标&quot;</strong>。</p>
+<h3>输出</h3>
+<p><strong>方案成本 vs 目标成本的差距（Gap）</strong></p>
+<pre><code>Gap = 方案成本 − 目标成本
+
+Gap &gt; 0 → 需要 VAVE 补差距（进入阶段五）
+Gap ≤ 0 → 可以直接进入商务阶段</code></pre>
+<h3>⚠️ 这一段最常踩的坑</h3>
+<blockquote><p><strong>估得太粗，导致 Gap 被低估，后面收不住。</strong></p></blockquote>
+<p>参数化估算最大的风险是<strong>系统性乐观</strong>——设计部门倾向认为自己的方案更简单、更容易做。</p>
+<p><strong>对策</strong>：估算时给出<strong>区间</strong>而不是单点值（最好/最可能/最差），并且对关键参数做<strong>敏感度分析</strong>： &quot;如果成型周期从 60 秒变成 80 秒，成本会增加多少？&quot;</p>
+<hr>
+<h2>阶段五：VAVE 方案成本达成</h2>
+<p><strong>这是最容易被误解的一段。</strong></p>
+<p>VAVE = <strong>VA（价值分析）+ VE（价值工程）</strong>。核心不是&quot;砍成本&quot;，而是：</p>
+<blockquote><p><strong>在保持或提升功能的前提下，降低成本。</strong></p></blockquote>
+<h3>差距怎么补</h3>
+<p>按优先级排序的手法：</p>
+<table><thead><tr><th>优先级</th><th>手法</th><th>说明</th><th>潜在降幅</th></tr></thead><tbody><tr><td>1</td><td><strong>消除过剩功能</strong></td><td>客户感知不到的性能，砍掉</td><td>大</td></tr><tr><td>2</td><td><strong>结构简化</strong></td><td>减少零件数、减少工序</td><td>中~大</td></tr><tr><td>3</td><td><strong>材料替代</strong></td><td>高强钢替代普通钢减薄、工程塑料替代金属</td><td>中</td></tr><tr><td>4</td><td><strong>工艺变更</strong></td><td>焊接改粘接、机加工改冲压</td><td>中</td></tr><tr><td>5</td><td><strong>标准化/模块化</strong></td><td>多车型共用零件 → 摊销下降</td><td>中</td></tr><tr><td>6</td><td><strong>供应商协同</strong></td><td>让供应商参与设计（ESI）</td><td>小~中</td></tr></tbody></table>
+<h3>⚠️ 这一段最常踩的坑</h3>
+<blockquote><p><strong>VAVE 变成了&quot;砍配置&quot;。</strong></p></blockquote>
+<p>砍配置确实能降成本，但那是在<strong>降低产品价值</strong>，不是价值工程。</p>
+<p><strong>判断标准</strong>：</p>
+<ul><li>✅ <strong>VAVE</strong>：功能不变，成本下降 → 利润增加</li><li>❌ <strong>砍配置</strong>：成本下降，但客户价值也下降 → 销量受损</li></ul>
+<p><strong>如果一段降本方案需要市场部门点头同意&quot;客户不会察觉&quot;，那它就不是 VAVE。</strong></p>
+<h3>一个必须建立的机制</h3>
+<p>VAVE 不是一次活动，是<strong>贯穿开发全过程的持续动作</strong>。所以要有：</p>
+<ul><li><strong>降本清单</strong>（谁提的、什么方案、省多少、什么时候落地）</li><li><strong>定期评审</strong>（每周/双周，跟踪落地率）</li><li><strong>达成率考核</strong>（不是&quot;提了多少方案&quot;，是&quot;落地了多少&quot;）</li></ul>
+<hr>
+<h2>阶段六：零部件目标商务达成</h2>
+<p><strong>前面所有的努力，都在这一段变成真金白银。</strong></p>
+<h3>输入</h3>
+<ul><li>零件目标成本（阶段三）</li><li>达成方案后的成本（阶段五）</li><li>供应商报价</li></ul>
+<h3>动作</h3>
+<ol><li><strong>询价与比价</strong>（多家供应商）</li><li><strong>成本拆解核价</strong>（把报价按七块拆开逐项核对）</li><li><strong>商务谈判</strong>（价格、账期、模具归属、年降条款）</li><li><strong>定点与合同</strong></li></ol>
+<h3>核价时看什么</h3>
+<p>拿到报价，按七块成本结构对号入座：</p>
+<table><thead><tr><th>检查点</th><th>危险信号</th></tr></thead><tbody><tr><td>有没有漏项</td><td>报价里没提模具、没提包装 → 后期加钱</td></tr><tr><td>管理费率</td><td>超过 15% → 偏高</td></tr><tr><td>利润率</td><td>超过 15% → 偏高（但要结合行业）</td></tr><tr><td>模具摊销口径</td><td>用年产量还是生命周期？<strong>口径不一致就没法比</strong></td></tr><tr><td>材料利用率</td><td>明显偏高 → 有水分</td></tr><tr><td>账期</td><td>有没有算进价格里</td></tr></tbody></table>
+<h3>⚠️ 这一段最常踩的坑</h3>
+<blockquote><p><strong>只谈价格，不谈总成本。</strong></p></blockquote>
+<p>采购价只是 TCO（总拥有成本）的一部分。真正影响利润的还有：</p>
+<ul><li><strong>账期</strong>（90 天账期吃掉供应商 10%+ 的利润，最终会反映到报价）</li><li><strong>质量成本</strong>（不良率高的供应商，采购价再低也亏）</li><li><strong>切换成本</strong>（换供应商的验证、认证、模具费用）</li><li><strong>年降承诺</strong>（谈定 3 年 5% 的年降，比一次降价更值钱）</li></ul>
+<hr>
+<h2>六段接力：一张总表</h2>
+<table><thead><tr><th>阶段</th><th>输入</th><th>核心动作</th><th>输出</th><th>精度要求</th><th>主要责任方</th></tr></thead><tbody><tr><td><strong>1 售价配置</strong></td><td>市场定位、竞品</td><td>定配置表 + 定售价</td><td>售价 × 销量</td><td>—</td><td>市场 + 产品规划</td></tr><tr><td><strong>2 整车目标</strong></td><td>售价、对标数据</td><td>从售价倒推</td><td>整车目标成本</td><td>±5%</td><td>成本 + 财务</td></tr><tr><td><strong>3 零件分解</strong></td><td>整车目标、历史结构</td><td>逐级分解 + 定驱动因子</td><td>零件目标成本</td><td>±10%</td><td>成本</td></tr><tr><td><strong>4 方案预估</strong></td><td>概念设计</td><td>参数化估算</td><td>Gap</td><td>±20~30%</td><td>成本 + 设计</td></tr><tr><td><strong>5 VAVE 达成</strong></td><td>Gap</td><td>价值工程</td><td>降本清单 + 达成方案</td><td>±10%</td><td>成本 + 设计 + 供应商</td></tr><tr><td><strong>6 商务达成</strong></td><td>达成方案</td><td>核价 + 谈判 + 定点</td><td>实际采购价</td><td>±3%</td><td>采购 + 成本</td></tr></tbody></table>
+<p><strong>注意精度的演进</strong>：从 ±30% 一路收敛到 ±3%。</p>
+<p><strong>这就是为什么每一段都必须留有余量</strong>——你在阶段四用 ±30% 的估算去下结论， 到阶段六必然会被现实修正。<strong>留余量不是保守，是专业。</strong></p>
+<hr>
+<h2>成本工程师在这条链上的角色</h2>
+<p>看完整条链会发现一件事：</p>
+<blockquote><p><strong>真正难的从来不是&quot;算一个零件的成本&quot;。</strong></p></blockquote>
+<p>真正难的是：</p>
+<ol><li><strong>判断目标定得合不合理</strong>（阶段二）</li><li><strong>把整车目标合理地拆到零件上</strong>（阶段三）</li><li><strong>识别哪个参数最敏感</strong>（阶段四）</li><li><strong>在功能不降的前提下找降本空间</strong>（阶段五）</li><li><strong>把成本语言翻译成商务条款</strong>（阶段六）</li></ol>
+<p>这五件事，<strong>没有一件是&quot;套公式&quot;能解决的</strong>。它们需要的是——</p>
+<blockquote><p><strong>对成本结构的理解 + 对工艺的认知 + 对商务的判断。</strong></p></blockquote>
+<p>这也是为什么成本工程师不容易被工具替代：<strong>工具能算出数，但决定&quot;这个数对不对、该不该接受&quot;的，是人。</strong></p>
+<hr>
+<p><em>本文是方法论框架。具体到单个零件的成本怎么算，见</em> <a href="seven-cost-blocks.html">《一个汽车零件的成本，到底由哪七块构成》</a> <em>；</em> <em>账期对供应商的影响，见</em> <a href="payment-terms-cost.html">《主机厂账期 90 天，供应商的真实成本是多少》</a> <em>。</em></p></article><div class="notice info" style="margin-top:32px;max-width:780px;">🔧 想直接算一算？<a href="../injection/index.html">注塑件成本模型</a> · <a href="../stamping/index.html">冲压件成本模型</a></div>
+</main>
+<footer class="site-footer"><div class="wrap"><p>汽车成本工具箱 · 汽车成本估算与供应链工具</p><p>全部计算在浏览器内完成，不依赖外部 CDN、不上传任何数据，可离线与企业内网使用</p><p style="margin-top:8px;">© 2025–2026 · <a href="../index.html">返回首页</a></p></div></footer>
+</body>
+</html>

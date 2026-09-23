@@ -189,6 +189,7 @@ function parseFrontMatter(raw) {
 const NAV = [
     { href: 'index.html', label: '首页' },
     { href: 'materials/index.html', label: '材料价格库' },
+    { href: 'craft/index.html', label: '工艺价格库' },
     { href: 'kb/index.html', label: '知识库' },
     { href: 'injection/index.html', label: '注塑件工具' },
     { href: 'stamping/index.html', label: '冲压件工具' }
@@ -321,7 +322,7 @@ function buildMaterials(data) {
     list.forEach(m => {
         const hasPrice = m.unitPrice !== null && m.unitPrice !== undefined && m.unitPrice !== '';
         const title = m.code + '（' + m.category + '）密度、规格、价格与典型应用';
-        const kv = [
+        const kvRows = [
             ['牌号', m.code],
             ['类型', kinds[m.kind] || m.kind],
             ['材料类别', m.category],
@@ -329,10 +330,12 @@ function buildMaterials(data) {
             ['密度', m.density + ' g/cm³'],
             ['参考单价', hasPrice ? m.unitPrice + ' 元/kg' : '待补充'],
             ['典型应用', m.application || '—'],
-            ['常见工艺', m.process || '—'],
-            ['数据来源', m.source || '—'],
-            ['更新日期', m.updatedAt || '—']
-        ].map(kvItem => '<dt>' + esc(kvItem[0]) + '</dt><dd>' + esc(kvItem[1]) + '</dd>').join('');
+            ['常见工艺', m.process || '—']
+        ];
+        if (m.note) kvRows.push(['说明', m.note]);
+        kvRows.push(['数据来源', m.source || '—']);
+        kvRows.push(['更新日期', m.updatedAt || '—']);
+        const kv = kvRows.map(kvItem => '<dt>' + esc(kvItem[0]) + '</dt><dd>' + esc(kvItem[1]) + '</dd>').join('');
 
         const toolLink = m.kind === 'polymer'
             ? '<a href="../injection/index.html">注塑件成本模型</a> 估算这个材料的零件成本'
@@ -457,6 +460,129 @@ function buildKb() {
 }
 
 /* ============================================================
+ * 4b. 工艺价格库（含会员门禁）
+ *
+ * 门禁设计原则：只锁「工具里算不出来」的数据。
+ * 能从免费工具推导的（如冲压冲次费 = 机时费率 ÷ (SPM×60)）一律公开 ——
+ * 给客户能自己算出来的数据加锁，等于告诉他你在收智商税。
+ *
+ * ⚠️ 前端门禁只能挡住普通用户。真正的会员数据不进公开仓库，
+ *    只存在于本地 data/craft-prices.local.json（已 gitignore）。
+ * ============================================================ */
+
+function renderMemberCta(site, memberCount) {
+    const c = (site && site.memberCta) || {};
+    const ways = [];
+    if (c.wechat) ways.push('<li>微信：<b>' + esc(c.wechat) + '</b></li>');
+    if (c.formUrl) ways.push('<li><a href="' + esc(c.formUrl) + '" target="_blank" rel="noopener">'
+        + esc(c.formLabel || '在线表单') + '</a></li>');
+    if (c.email) ways.push('<li>邮箱：<a href="mailto:' + esc(c.email) + '">' + esc(c.email) + '</a></li>');
+
+    const body = ways.length
+        ? '<p>' + esc(c.desc || '') + '</p><ul class="cta-ways">' + ways.join('') + '</ul>'
+        : '<p>' + esc(c.desc || '') + '</p>'
+        + '<p class="cta-todo">（作者尚未配置联系方式 —— 在 <code>data/site.json</code> 的 '
+        + '<code>memberCta</code> 里填微信号 / 表单链接 / 邮箱即可）</p>';
+
+    return '<div class="cta"><h3>🔓 ' + esc(c.title || '解锁会员区')
+        + ' <span class="cta-n">' + memberCount + ' 项经验价格</span></h3>' + body + '</div>';
+}
+
+/**
+ * @param {Object} craft   craft-prices.json
+ * @param {Object} site    site.json
+ * @param {Object} opts    { unlock:boolean, localPrices:{} }
+ */
+function buildCraft(craft, site, opts) {
+    opts = opts || {};
+    const unlock = !!opts.unlock;
+    const localPrices = opts.localPrices || {};
+    const cats = craft.categories || {};
+
+    // 合并本地价格（会员区经验价只存在本地文件里）
+    const items = (craft.items || []).map(it => {
+        const merged = Object.assign({}, it);
+        const p = localPrices[it.code];
+        if (p !== undefined && p !== null && p !== '') merged.unitPrice = p;
+        return merged;
+    });
+
+    const memberItems = items.filter(i => i.visibility === 'member');
+    const memberCount = memberItems.length;
+    const publicCount = items.length - memberCount;
+    const priced = items.filter(i => i.unitPrice !== null && i.unitPrice !== undefined && i.unitPrice !== '').length;
+
+    const groups = Object.keys(cats).map(cat => {
+        const list = items.filter(i => i.category === cat);
+        if (!list.length) return '';
+        const rows = list.map(it => {
+            const locked = !unlock && it.visibility === 'member';
+            const hasPrice = it.unitPrice !== null && it.unitPrice !== undefined && it.unitPrice !== '';
+            const priceHtml = locked
+                ? '<td class="price locked">🔒 会员可见</td>'
+                : (hasPrice
+                    ? '<td class="price">' + esc(it.unitPrice) + '</td>'
+                    : '<td class="price pending">待补充</td>');
+            return '<tr' + (locked ? ' class="locked"' : '') + '>'
+                + '<td><strong>' + esc(it.name) + '</strong>'
+                + (locked ? ' <span class="lock-tag">会员</span>' : '') + '</td>'
+                + '<td class="muted">' + esc(it.unit || '—') + '</td>'
+                + priceHtml
+                + '<td class="muted">' + esc(it.basis || '—')
+                + (it.note ? '<br><span class="cell-note">' + esc(it.note) + '</span>' : '')
+                + '</td>'
+                + '</tr>';
+        }).join('');
+
+        return '<h2 class="group-h">' + esc(cats[cat])
+            + ' <span class="group-n">' + list.length + ' 项</span></h2>'
+            + '<div class="table-scroll"><table class="data"><thead><tr>'
+            + '<th style="width:26%">工艺 / 物料</th>'
+            + '<th style="width:13%">计价单位</th>'
+            + '<th style="width:14%">参考单价</th>'
+            + '<th>计价基准与说明</th>'
+            + '</tr></thead><tbody>' + rows + '</tbody></table></div>';
+    }).join('');
+
+    const banner = '<div class="notice info">'
+        + '共 <b>' + items.length + '</b> 项：<b>' + publicCount + '</b> 项公开'
+        + '（工具里可推导或已内置）、<b>' + memberCount + '</b> 项会员可见'
+        + '（需项目经验积累的经验价格）'
+        + (unlock ? '。<b>当前为会员版，全部解锁。</b>' : '。')
+        + '</div>';
+
+    const content = '<div class="page-head">'
+        + '<h1>🛠️ ' + esc(craft.title || '常用工艺核算价格库') + '</h1>'
+        + '<p class="lead">' + esc(craft.intro || '') + '</p>'
+        + '</div>'
+        + banner
+        + '<div class="notice" style="margin-top:12px;">⚠️ ' + esc(craft.disclaimer || '') + '</div>'
+        + '<div style="margin-top:24px;">' + groups + '</div>'
+        + (unlock ? '' : renderMemberCta(site, memberCount))
+        + '<div class="notice info" style="margin-top:24px;">🔧 这些费率可以直接填进工具：'
+        + '<a href="../injection/index.html">注塑件成本模型</a> · '
+        + '<a href="../stamping/index.html">冲压件成本模型</a> 的「费率与税费 / 表面处理库」区。</div>';
+
+    const html = layout({
+        title: (craft.title || '工艺价格库') + ' · ' + SITE_NAME,
+        description: '汽车常用工艺核算价格库：表面处理（喷漆/电泳/镀铝/软包覆/UV硬化）、冲压冲次费、'
+            + '压铸与铸件毛坯、线束物料、机加工费率，含计价单位与计价基准。',
+        canonical: unlock ? null : SITE_URL + '/craft/',
+        depth: 1,
+        active: 'craft/index.html',
+        content: content
+    });
+
+    return {
+        html: html,
+        count: items.length,
+        publicCount: publicCount,
+        memberCount: memberCount,
+        priced: priced
+    };
+}
+
+/* ============================================================
  * 5. sitemap
  * ============================================================ */
 
@@ -479,33 +605,70 @@ function buildSitemap(pages) {
  * 6. 主流程
  * ============================================================ */
 
-function build() {
-    const dataPath = path.join(ROOT, 'data', 'materials.json');
-    if (!fs.existsSync(dataPath)) throw new Error('缺少数据文件：data/materials.json');
-    const data = readJson(dataPath);
+function loadOptional(rel, fallback) {
+    const p = path.join(ROOT, rel);
+    if (!fs.existsSync(p)) return fallback;
+    try { return readJson(p); } catch (e) { throw new Error('解析失败 ' + rel + '：' + e.message); }
+}
 
-    console.log('构建静态站点\n' + '─'.repeat(56));
+function build(opts) {
+    opts = opts || {};
+
+    const data = readJson(path.join(ROOT, 'data', 'materials.json'));
+    const craft = loadOptional(path.join('data', 'craft-prices.json'), null);
+    const site = loadOptional(path.join('data', 'site.json'), {});
+    const localAll = loadOptional(path.join('data', 'craft-prices.local.json'), {}) || {};
+    const localPrices = localAll.prices || {};
+
+    console.log('构建静态站点' + (opts.member ? '（含会员版）' : '') + '\n' + '─'.repeat(56));
 
     const mat = buildMaterials(data);
     console.log('  材料价格库    ' + mat.count + ' 个牌号（' + mat.withPrice + ' 个有价） → materials/');
     console.log('                ' + mat.count + ' 个详情页');
 
+    let craftRes = null;
+    if (craft && craft.items) {
+        const r = buildCraft(craft, site, { localPrices: localPrices });
+        craftRes = { bytes: writeFile('craft/index.html', r.html), count: r.count, publicCount: r.publicCount, memberCount: r.memberCount, priced: r.priced };
+        console.log('  工艺价格库    ' + r.count + ' 项（公开 ' + r.publicCount + ' / 会员 ' + r.memberCount
+            + '，已填价 ' + r.priced + '） → craft/');
+    }
+
     const kb = buildKb();
     console.log('  知识库        ' + kb.count + ' 篇文章 → kb/');
 
-    const sm = buildSitemap(mat.pages.concat(kb.pages));
+    const pages = mat.pages.concat(kb.pages);
+    if (craftRes) pages.push({ loc: SITE_URL + '/craft/', priority: '0.8' });
+
+    const sm = buildSitemap(pages);
     console.log('  站点地图      ' + sm.count + ' 条 URL → sitemap.xml');
 
-    console.log('─'.repeat(56));
-    console.log('  共生成 ' + (1 + mat.count + 1 + kb.count + 1) + ' 个文件，'
-        + Math.round((mat.bytes + kb.bytes + sm.bytes) / 1024) + ' KB');
+    // ---- 会员版（不进仓库，只用于交付给会员）----
+    let memberRes = null;
+    if (opts.member && craft && craft.items) {
+        const m = buildCraft(craft, site, { unlock: true, localPrices: localPrices });
+        const filled = Object.keys(localPrices).length;
+        memberRes = { bytes: writeFile('_member/index.html', m.html), filled: filled };
+        console.log('─'.repeat(56));
+        console.log('  会员版        _member/index.html（已解锁 ' + m.memberCount + ' 项会员数据，'
+            + '其中 ' + filled + ' 项来自本地价格文件）');
+        if (!filled) {
+            console.log('  ⚠️  提示：data/craft-prices.local.json 还没有价格，会员版里会员区是空的。');
+            console.log('     复制 data/craft-prices.local.example.json 填写后重新构建。');
+        }
+    }
 
-    return { materials: mat, kb: kb, sitemap: sm };
+    console.log('─'.repeat(56));
+    let totalFiles = 1 + mat.count + 1 + kb.count + 1 + (craftRes ? 1 : 0) + (memberRes ? 1 : 0);
+    let totalBytes = mat.bytes + kb.bytes + sm.bytes + (craftRes ? craftRes.bytes : 0) + (memberRes ? memberRes.bytes : 0);
+    console.log('  共生成 ' + totalFiles + ' 个文件，' + Math.round(totalBytes / 1024) + ' KB');
+
+    return { materials: mat, craft: craftRes, kb: kb, sitemap: sm, member: memberRes };
 }
 
 if (require.main === module) {
     try {
-        build();
+        build({ member: process.argv.indexOf('--member') >= 0 });
         console.log('\n✅ 构建完成');
     } catch (e) {
         console.error('\n❌ 构建失败：' + e.message);
@@ -513,4 +676,4 @@ if (require.main === module) {
     }
 }
 
-module.exports = { build, renderMarkdown, parseFrontMatter, slugify, esc };
+module.exports = { build, buildCraft, renderMarkdown, parseFrontMatter, slugify, esc };
