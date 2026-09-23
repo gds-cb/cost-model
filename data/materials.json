@@ -328,6 +328,7 @@
     },
     {
       "code": "T2紫铜",
+      "slug": "copper-t2",
       "kind": "metal",
       "category": "纯铜（电工用铜）",
       "spec": "板 / 带 / 管 / 线",
@@ -341,6 +342,7 @@
     },
     {
       "code": "H62黄铜",
+      "slug": "brass-h62",
       "kind": "metal",
       "category": "铜锌合金（黄铜，含锌约 38%）",
       "spec": "板 / 带 / 棒",
@@ -354,6 +356,7 @@
     },
     {
       "code": "A00铝锭",
+      "slug": "aluminum-a00",
       "kind": "metal",
       "category": "电解铝（原铝）",
       "spec": "铝锭 / 铝水",
@@ -367,6 +370,7 @@
     },
     {
       "code": "EPDM生胶",
+      "slug": "epdm",
       "kind": "rubber",
       "category": "三元乙丙橡胶（生胶）",
       "spec": "生胶 / 混炼胶",
@@ -380,6 +384,7 @@
     },
     {
       "code": "NR天然橡胶",
+      "slug": "nr-natural-rubber",
       "kind": "rubber",
       "category": "天然橡胶（生胶）",
       "spec": "生胶 / 混炼胶",
@@ -393,6 +398,7 @@
     },
     {
       "code": "VMQ硅橡胶",
+      "slug": "vmq-silicone",
       "kind": "rubber",
       "category": "甲基乙烯基硅橡胶（生胶）",
       "spec": "生胶 / 混炼胶",
@@ -406,6 +412,7 @@
     },
     {
       "code": "NBR丁腈橡胶",
+      "slug": "nbr-nitrile",
       "kind": "rubber",
       "category": "丁腈橡胶（生胶）",
       "spec": "生胶 / 混炼胶",
@@ -419,6 +426,7 @@
     },
     {
       "code": "浮法玻璃原片",
+      "slug": "glass-float",
       "kind": "glass",
       "category": "钠钙硅玻璃（浮法）",
       "spec": "厚度 2~6 mm",
@@ -432,6 +440,7 @@
     },
     {
       "code": "PVB中间膜",
+      "slug": "pvb-interlayer",
       "kind": "glass",
       "category": "聚乙烯醇缩丁醛中间膜",
       "spec": "厚度 0.38 / 0.76 mm",
@@ -445,6 +454,7 @@
     },
     {
       "code": "尼龙管PA11",
+      "slug": "nylon-tube-pa11",
       "kind": "part",
       "category": "尼龙管（PA11 挤出管）",
       "spec": "外径 6~12 mm，壁厚 1~1.5 mm",
@@ -458,6 +468,7 @@
     },
     {
       "code": "尼龙管PA12",
+      "slug": "nylon-tube-pa12",
       "kind": "part",
       "category": "尼龙管（PA12 挤出管）",
       "spec": "外径 6~12 mm，壁厚 1~1.5 mm",

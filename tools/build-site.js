@@ -244,7 +244,15 @@ function buildMaterials(data) {
         return ko !== 0 ? ko : String(a.code).localeCompare(String(b.code));
     });
 
-    list.forEach(m => { m._slug = slugify(m.code); });
+    // 优先用显式 slug（中文名 slugify 后会变成空，回落成 item）
+    list.forEach(m => { m._slug = m.slug || slugify(m.code); });
+
+    // 兜底告警：slug 回落成默认值说明牌号里有全中文名，应补 slug 字段
+    const fallbackCodes = list.filter(m => m._slug === 'item').map(m => m.code);
+    if (fallbackCodes.length) {
+        console.warn('  ⚠️  以下牌号 slug 回落成了 item，请在 data/materials.json 里补 "slug" 字段：'
+            + fallbackCodes.join('、'));
+    }
 
     const withPrice = list.filter(m => m.unitPrice !== null && m.unitPrice !== undefined).length;
     const kinds = data.kinds || {};

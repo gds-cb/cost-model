@@ -27,19 +27,19 @@
   <url><loc>https://gds-cb.github.io/cost-model/materials/pp-epdm-t20.html</loc><priority>0.7</priority></url>
   <url><loc>https://gds-cb.github.io/cost-model/materials/5182.html</loc><priority>0.7</priority></url>
   <url><loc>https://gds-cb.github.io/cost-model/materials/6061.html</loc><priority>0.7</priority></url>
-  <url><loc>https://gds-cb.github.io/cost-model/materials/item.html</loc><priority>0.7</priority></url>
-  <url><loc>https://gds-cb.github.io/cost-model/materials/pa11.html</loc><priority>0.7</priority></url>
-  <url><loc>https://gds-cb.github.io/cost-model/materials/pa12.html</loc><priority>0.7</priority></url>
-  <url><loc>https://gds-cb.github.io/cost-model/materials/a00.html</loc><priority>0.7</priority></url>
+  <url><loc>https://gds-cb.github.io/cost-model/materials/glass-float.html</loc><priority>0.7</priority></url>
+  <url><loc>https://gds-cb.github.io/cost-model/materials/nylon-tube-pa11.html</loc><priority>0.7</priority></url>
+  <url><loc>https://gds-cb.github.io/cost-model/materials/nylon-tube-pa12.html</loc><priority>0.7</priority></url>
+  <url><loc>https://gds-cb.github.io/cost-model/materials/aluminum-a00.html</loc><priority>0.7</priority></url>
   <url><loc>https://gds-cb.github.io/cost-model/materials/a356.html</loc><priority>0.7</priority></url>
   <url><loc>https://gds-cb.github.io/cost-model/materials/adc12.html</loc><priority>0.7</priority></url>
   <url><loc>https://gds-cb.github.io/cost-model/materials/epdm.html</loc><priority>0.7</priority></url>
-  <url><loc>https://gds-cb.github.io/cost-model/materials/h62.html</loc><priority>0.7</priority></url>
-  <url><loc>https://gds-cb.github.io/cost-model/materials/nbr.html</loc><priority>0.7</priority></url>
-  <url><loc>https://gds-cb.github.io/cost-model/materials/nr.html</loc><priority>0.7</priority></url>
-  <url><loc>https://gds-cb.github.io/cost-model/materials/pvb.html</loc><priority>0.7</priority></url>
-  <url><loc>https://gds-cb.github.io/cost-model/materials/t2.html</loc><priority>0.7</priority></url>
-  <url><loc>https://gds-cb.github.io/cost-model/materials/vmq.html</loc><priority>0.7</priority></url>
+  <url><loc>https://gds-cb.github.io/cost-model/materials/brass-h62.html</loc><priority>0.7</priority></url>
+  <url><loc>https://gds-cb.github.io/cost-model/materials/nbr-nitrile.html</loc><priority>0.7</priority></url>
+  <url><loc>https://gds-cb.github.io/cost-model/materials/nr-natural-rubber.html</loc><priority>0.7</priority></url>
+  <url><loc>https://gds-cb.github.io/cost-model/materials/pvb-interlayer.html</loc><priority>0.7</priority></url>
+  <url><loc>https://gds-cb.github.io/cost-model/materials/copper-t2.html</loc><priority>0.7</priority></url>
+  <url><loc>https://gds-cb.github.io/cost-model/materials/vmq-silicone.html</loc><priority>0.7</priority></url>
   <url><loc>https://gds-cb.github.io/cost-model/kb/</loc><priority>0.8</priority></url>
   <url><loc>https://gds-cb.github.io/cost-model/kb/vehicle-cost-control.html</loc><priority>0.7</priority></url>
   <url><loc>https://gds-cb.github.io/cost-model/kb/seven-cost-blocks.html</loc><priority>0.7</priority></url>

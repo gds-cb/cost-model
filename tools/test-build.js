@@ -272,7 +272,7 @@ section('真实构建');
         const data = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'materials.json'), 'utf8'));
         let missing = 0, dirty = 0;
         data.materials.forEach(m => {
-            const p = path.join(ROOT, 'materials', B.slugify(m.code) + '.html');
+            const p = path.join(ROOT, 'materials', (m.slug || B.slugify(m.code)) + '.html');
             if (!fs.existsSync(p)) { missing++; return; }
             const html = fs.readFileSync(p, 'utf8');
             if (/\*\*|^\s*\|/m.test(html)) dirty++;
@@ -280,15 +280,22 @@ section('真实构建');
         eq(missing, 0, '每个牌号都有详情页');
         eq(dirty, 0, '详情页没有残留 Markdown 标记');
 
-        // slug 必须唯一（否则会互相覆盖）
+        // slug 必须唯一，且不能回落成默认值
+        // （中文名 slugify 后会变成空 → 回落成 item，这正是本轮修的 bug）
         const slugs = {};
-        let dup = 0;
+        const dup = [], fallback = [], badSlug = [];
         data.materials.forEach(m => {
-            const s = B.slugify(m.code);
-            if (slugs[s]) dup++;
+            const s = m.slug || B.slugify(m.code);
+            if (slugs[s]) dup.push(s);
             slugs[s] = true;
+            if (s === 'item') fallback.push(m.code);
+            if (!/^[a-z0-9-]+$/.test(s)) badSlug.push(m.code + ' → ' + s);
         });
-        eq(dup, 0, '牌号 slug 无重复');
+        eq(dup.length, 0, '牌号 slug 无重复' + (dup.length ? '：' + dup.join(', ') : ''));
+        eq(fallback.length, 0, '没有牌号的 slug 回落到默认值 item'
+            + (fallback.length ? '：' + fallback.join(', ') : ''));
+        eq(badSlug.length, 0, '所有 slug 都是 URL 友好的小写 ASCII'
+            + (badSlug.length ? '：' + badSlug.join('; ') : ''));
 
         // 列表页要包含搜索框与筛选（否则搜索功能是死的）
         const listHtml = fs.readFileSync(path.join(ROOT, 'materials', 'index.html'), 'utf8');
