@@ -212,6 +212,8 @@
             managementRate: 0.12,
             profitRate: 0.10,
             taxRate: 0.13,
+            paymentDays: 0,             // 账期天数（0 = 不计账期资金占用）
+            capitalRate: 0.06,          // 资金成本年化
             scrapPrice: 0.0,
             scrapCredit: false,
             hotRunnerPricePerPoint: 2800,
@@ -232,6 +234,8 @@
             managementRate: 0.12,
             profitRate: 0.10,
             taxRate: 0.13,
+            paymentDays: 0,             // 账期天数（0 = 不计账期资金占用）
+            capitalRate: 0.06,          // 资金成本年化
             diePricePerKg: 25,
             ratePerTonKm: 0.5,
             minFreight: 300,

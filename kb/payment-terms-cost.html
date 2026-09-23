@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>主机厂账期 90 天，供应商的真实成本是多少 · 汽车成本工具箱</title>
+<meta name="description" content="报一个零件时，账期成本只占 1.5%，所以几乎没人算它。但它累积到公司层面，会吃掉 10%~15% 的净利润——这才是供应商被压垮的真正原因。">
+<link rel="canonical" href="https://gds-cb.github.io/cost-model/kb/payment-terms-cost.html">
+<link rel="stylesheet" href="../assets/site.css">
+</head>
+<body>
+<header class="site-header"><div class="wrap"><a class="brand" href="../index.html">🚗 汽车成本工具箱<span>成本与供应链</span></a><nav class="site-nav"><a href="../index.html">首页</a><a href="../materials/index.html">材料价格库</a><a href="../kb/index.html" class="active">知识库</a><a href="../injection/index.html">注塑件工具</a><a href="../stamping/index.html">冲压件工具</a></nav></div></header>
+<main class="wrap">
+<div class="page-head"><p style="font-size:.8rem;color:#94a3b8;margin-bottom:6px;"><a href="index.html" style="color:#2563eb;text-decoration:none;">← 知识库</a></p><h1>主机厂账期 90 天，供应商的真实成本是多少</h1><p class="lead" style="font-size:.8rem;color:#94a3b8;">2026-03-01 · #账期 · #现金流 · #供应链</p></div><article class="prose"><h2>一个被报价单忽略的成本</h2>
+<p>先看一个数字。</p>
+<p>一个完全成本 <strong>11.03 元</strong>的零件，如果主机厂账期是 <strong>90 天</strong>，按年化 <strong>6%</strong> 的资金成本算：</p>
+<pre><code>账期资金占用 = 11.03 × 6% × 90 ÷ 365 = 0.16 元</code></pre>
+<p><strong>只占报价的 1.5%。</strong></p>
+<p>所以在零件级报价的时候，几乎所有供应商都会忽略它——&quot;才一块六毛钱，算了&quot;。</p>
+<p><strong>但这个 1.5%，累积到公司层面，会变成一个完全不同的数字。</strong></p>
+<h2>换个尺度看：从&quot;一个零件&quot;到&quot;一家公司&quot;</h2>
+<p>假设一家供应商：<strong>年营收 5000 万，净利率 5%</strong>（这在中国汽车零部件行业已经算不错了）。</p>
+<p>它的全年净利润是 <strong>250 万</strong>。</p>
+<p>现在账期从 <strong>60 天</strong>延长到 <strong>90 天</strong>：</p>
+<table><thead><tr><th>项目</th><th>计算</th><th>结果</th></tr></thead><tbody><tr><td>多占用的资金</td><td>5000 万 × 30 ÷ 365</td><td><strong>≈ 411 万</strong></td></tr><tr><td>按年化 6%（银行贷款）</td><td>411 万 × 6%</td><td><strong>24.7 万/年</strong></td></tr><tr><td>按年化 10%（保理/供应链金融）</td><td>411 万 × 10%</td><td><strong>41.1 万/年</strong></td></tr><tr><td>按年化 15%（民间拆借）</td><td>411 万 × 15%</td><td><strong>61.7 万/年</strong></td></tr></tbody></table>
+<p><strong>对比一下这 250 万的净利润：</strong></p>
+<table><thead><tr><th>融资成本</th><th>账期延长 30 天吃掉</th><th>占净利润</th></tr></thead><tbody><tr><td>6%</td><td>24.7 万</td><td><strong>9.9%</strong></td></tr><tr><td>10%</td><td>41.1 万</td><td><strong>16.4%</strong></td></tr><tr><td>15%</td><td>61.7 万</td><td><strong>24.7%</strong></td></tr></tbody></table>
+<blockquote><p><strong>账期延长一个月，吃掉 10% 到 25% 的净利润。</strong></p></blockquote>
+<p>而且中小供应商往往<strong>拿不到 6% 的银行贷款</strong>——它们实际面对的融资成本更接近 10%~15% 那一档。</p>
+<h2>为什么实际垫资比&quot;账期&quot;更久</h2>
+<p>账期的 90 天只是<strong>应收账款</strong>那一段。真实的现金转换周期还要加上前面两段：</p>
+<pre><code>现金转换周期 = 存货天数 + 应收账款天数 − 应付账款天数</code></pre>
+<p>举个典型例子：</p>
+<table><thead><tr><th>环节</th><th>天数</th></tr></thead><tbody><tr><td>原材料库存</td><td>30</td></tr><tr><td>生产 + 成品库存</td><td>15</td></tr><tr><td><strong>应收账款（账期）</strong></td><td><strong>90</strong></td></tr><tr><td>减：对上游的应付账款</td><td>−45</td></tr><tr><td><strong>实际现金转换周期</strong></td><td><strong>90 天</strong></td></tr></tbody></table>
+<p><strong>注意</strong>：账期是 90 天，但实际垫资周期也是 90 天左右—— 因为上游供应商不会给你同样的账期。你是<strong>两头受挤</strong>的那一环。</p>
+<p>如果再加上<strong>商业承兑汇票</strong>（6 个月），情况会更糟：</p>
+<ul><li>票据到期前的贴现成本（通常 3%~8% 年化）</li><li>到期不能兑付的风险</li><li>账面上的&quot;已收款&quot;和实际现金是两回事</li></ul>
+<h2>这里有个值得警惕的信号</h2>
+<p>我查资料时注意到，<strong>工信部等部门近期发布了汽车账期新规</strong>（重构产业链信用）。</p>
+<p>这说明账期问题已经从&quot;企业间的商务博弈&quot;上升到了<strong>行业治理</strong>层面—— 之所以需要出台规定，恰恰是因为它已经严重到了影响整个供应链健康的程度。</p>
+<p>对供应商来说，这是好消息；但对<strong>成本工程师</strong>来说，意味着：</p>
+<blockquote><p><strong>以后算成本，账期不能不算了。</strong></p></blockquote>
+<h2>怎么把账期算进报价</h2>
+<p>方法很简单，就是上面那个公式：</p>
+<pre><code>完全成本 × (1 + 年化资金成本 × 账期天数 ÷ 365)</code></pre>
+<p>回到那个 11.03 元的零件：</p>
+<table><thead><tr><th>账期</th><th>年化 6%</th><th>年化 10%</th></tr></thead><tbody><tr><td>现款</td><td>11.03</td><td>11.03</td></tr><tr><td>30 天</td><td>11.08</td><td>11.12</td></tr><tr><td>60 天</td><td>11.14</td><td>11.22</td></tr><tr><td><strong>90 天</strong></td><td><strong>11.19</strong></td><td><strong>11.30</strong></td></tr><tr><td>120 天</td><td>11.25</td><td>11.39</td></tr></tbody></table>
+<p><strong>90 天账期 vs 现款，差 1.6%~2.4%。</strong></p>
+<p>看起来不多——但记住前面那个数字：<strong>在公司层面，这是 10%~25% 的净利润。</strong></p>
+<h2>所以该怎么用它</h2>
+<p><strong>如果你是供应商：</strong></p>
+<ol><li><strong>报价时把账期单独列出来</strong>，不要藏在总价里。</li></ol>
+<p>&quot;我们的报价基于 60 天账期，如果 90 天，加 1.5%；如果 120 天，加 2.4%。&quot; 这样你不是在涨价，是在<strong>陈述一个客观的成本差异</strong>——谈判地位完全不同。</p>
+<ol><li><strong>算清楚自己的真实融资成本</strong>。不是银行贷款利率，是你实际付出的那个数。</li><li><strong>把它写进合同</strong>。账期是商务条款，不是施舍。</li></ol>
+<p><strong>如果你是主机厂/采购：</strong></p>
+<ol><li>账期不是&quot;免费的资金支持&quot;——它是<strong>供应商成本的一部分</strong>，最终会以某种形式回到报价里。</li><li>如果要延长账期，那就在价格上给对应的空间，否则供应商只有两条路：<strong>偷工减料，或者倒闭</strong>。</li><li>反过来，<strong>缩短账期是在不涨价的前提下降低供应商成本</strong>——这是一个被严重低估的降本工具。</li></ol>
+<hr>
+<p><em>这个模型已经内置在两个工具里：</em> <a href="../injection/index.html"><em>注塑件成本模型</em></a> <em>的「费率与税费」区可以配置账期天数和资金成本，</em> <em>算出来的完全成本会自动把账期成本包含进去。</em></p></article><div class="notice info" style="margin-top:32px;max-width:780px;">🔧 想直接算一算？<a href="../injection/index.html">注塑件成本模型</a> · <a href="../stamping/index.html">冲压件成本模型</a></div>
+</main>
+<footer class="site-footer"><div class="wrap"><p>汽车成本工具箱 · 汽车成本估算与供应链工具</p><p>全部计算在浏览器内完成，不依赖外部 CDN、不上传任何数据，可离线与企业内网使用</p><p style="margin-top:8px;">© 2025–2026 · <a href="../index.html">返回首页</a></p></div></footer>
+</body>
+</html>

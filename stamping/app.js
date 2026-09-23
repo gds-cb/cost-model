@@ -61,6 +61,8 @@
             setV('profitRate', E.round(s.profitRate * 100, 2));
             setV('taxRate', E.round(s.taxRate * 100, 2));
             setV('blankUtilization', s.blankUtilization);
+            setV('paymentDays', s.paymentDays);
+            setV('capitalRate', E.round(E.num(s.capitalRate, 0.06) * 100, 2));
 
             if (!bomTree.length) loadSampleBom();
         }
@@ -82,6 +84,8 @@
                 managementRate: g('mgmtRate', 12) / 100,
                 profitRate: g('profitRate', 10) / 100,
                 taxRate: g('taxRate', 13) / 100,
+                paymentDays: g('paymentDays', 0),
+                capitalRate: g('capitalRate', 6) / 100,
                 scrapAccountingMethod: (document.getElementById('scrapAccountingMethod') || {}).value || 'deduct'
             };
         }
@@ -637,7 +641,9 @@
                     overhead: {
                         managementRate: rates.managementRate,
                         profitRate: rates.profitRate,
-                        taxRate: rates.taxRate
+                        taxRate: rates.taxRate,
+                        paymentDays: rates.paymentDays,
+                        capitalRate: rates.capitalRate
                     }
                 });
 
@@ -919,7 +925,7 @@
 
             // 费率类参数：输入即重算，失焦时落库
             ['diePricePerKg', 'scrapPrice', 'ratePerTonKm', 'minFreight', 'handlingFee',
-                'mgmtRate', 'profitRate', 'taxRate', 'blankUtilization',
+                'mgmtRate', 'profitRate', 'taxRate', 'blankUtilization', 'paymentDays', 'capitalRate',
                 'logisticsDistance', 'fullLoadQty', 'partialRatio', 'annualQty'].forEach(id => {
                     const node = document.getElementById(id);
                     if (!node) return;

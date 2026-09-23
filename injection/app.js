@@ -98,6 +98,8 @@
         set('profitRate', E.round(settings.profitRate * 100, 2));
         set('taxRate', E.round(settings.taxRate * 100, 2));
         set('scrapPrice', settings.scrapPrice);
+        set('paymentDays', settings.paymentDays);
+        set('capitalRate', E.round(E.num(settings.capitalRate, 0.06) * 100, 2));
     }
 
     function readSettingsFromForm() {
@@ -105,6 +107,8 @@
             managementRate: numOf('managementRate', 12) / 100,
             profitRate: numOf('profitRate', 10) / 100,
             taxRate: numOf('taxRate', 13) / 100,
+            paymentDays: numOf('paymentDays', 0),
+            capitalRate: numOf('capitalRate', 6) / 100,
             scrapPrice: numOf('scrapPrice', 0)
         });
     }
@@ -483,6 +487,8 @@
                     managementRate: settings.managementRate,
                     profitRate: settings.profitRate,
                     taxRate: settings.taxRate,
+                    paymentDays: settings.paymentDays,
+                    capitalRate: settings.capitalRate,
                     jitFactor: jitFactorFromForm()
                 }
             });
@@ -866,7 +872,7 @@
             'milkrunTotalCost', 'milkrunPartsPerTrip', 'rdcInboundFee', 'rdcLineFeedFee', 'rdcStorageFee',
             'rdcInventoryDays', 'packagingAmortize', 'emptyReturn', 'deliveryRequirement', 'ediFee',
             'volumetricFactor', 'runnerWeight', 'partGeometry', 'thicknessUniformity',
-            'managementRate', 'profitRate', 'taxRate', 'scrapPrice', 'partName'];
+            'managementRate', 'profitRate', 'taxRate', 'scrapPrice', 'paymentDays', 'capitalRate', 'partName'];
         autoIds.forEach(function (id) {
             var n = el(id);
             if (!n) return;

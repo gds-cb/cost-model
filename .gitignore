@@ -24,3 +24,7 @@ dist/
 # 商业策略类文档 —— 刻意不公开（含营收预测、竞争判断、在职/竞业风险讨论）
 汽车成本工具-市场前景分析.md
 商业策略*.md
+
+# 与成本工具无关的临时产出（BandLab 吉他扫弦 MIDI）
+BandLab/
+BandLab-Guitar-MIDI/

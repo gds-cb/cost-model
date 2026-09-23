@@ -246,6 +246,31 @@ async function testInjection(server) {
     fb.querySelector('[data-ce="close"]').click();
     await sleep(30);
 
+    /* ---------- 账期资金占用（本轮从引擎接到界面） ---------- */
+    setInput(win, doc.getElementById('paymentDays'), 0);
+    setInput(win, doc.getElementById('capitalRate'), 6);
+    await sleep(60);
+    const beforeTerms = money(doc.getElementById('totalCostVal').textContent);
+
+    setInput(win, doc.getElementById('paymentDays'), 90);
+    await sleep(60);
+    const afterTerms = money(doc.getElementById('totalCostVal').textContent);
+    ok(afterTerms > beforeTerms, '设置 90 天账期后完全成本上升（账期已接入界面）',
+        beforeTerms + ' → ' + afterTerms);
+    near((afterTerms - beforeTerms) / beforeTerms, 0.0148, 0.003, '账期成本约占 1.5%（90 天 × 年化 6%）');
+    ok(/账期资金占用/.test(doc.getElementById('costDetails').textContent),
+        '成本构成明细里出现「账期资金占用」一行');
+
+    setInput(win, doc.getElementById('paymentDays'), 180);
+    await sleep(60);
+    const at180 = money(doc.getElementById('totalCostVal').textContent);
+    ok(at180 > afterTerms, '账期 180 天成本进一步上升', afterTerms + ' → ' + at180);
+
+    setInput(win, doc.getElementById('capitalRate'), 0);
+    await sleep(60);
+    near(money(doc.getElementById('totalCostVal').textContent), beforeTerms, 0.01,
+        '资金成本设为 0 时账期不产生成本');
+
     dom.window.close();
 }
 
@@ -435,6 +460,17 @@ async function testStamping(server) {
     fb.querySelector('[data-ce="close"]').click();
     await sleep(30);
     ok(!doc.getElementById('ceFeedbackModal'), '弹窗可正常关闭');
+
+    /* ---------- 账期资金占用（冲压件同样接入） ---------- */
+    setInput(win, doc.getElementById('paymentDays'), 0);
+    setInput(win, doc.getElementById('capitalRate'), 6);
+    await sleep(60);
+    const stBefore = money(doc.getElementById('totalCostVal').textContent);
+    setInput(win, doc.getElementById('paymentDays'), 90);
+    await sleep(60);
+    const stAfter = money(doc.getElementById('totalCostVal').textContent);
+    ok(stAfter > stBefore, '冲压件设置 90 天账期后完全成本上升', stBefore + ' → ' + stAfter);
+    near((stAfter - stBefore) / stBefore, 0.0148, 0.003, '冲压件账期成本约占 1.5%');
 
     // 旧的本地假反馈入口应当已移除
     ok(!doc.getElementById('feedbackModal'), '旧的「提交后存本地」假反馈弹窗已移除');

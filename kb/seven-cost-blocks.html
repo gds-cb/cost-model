@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>一个汽车零件的成本，到底由哪七块构成 · 汽车成本工具箱</title>
+<meta name="description" content="不管什么零件——注塑、冲压、压铸、机加工——成本都是同样七块的组合。搞清楚这七块，你就能回答那个最难的问题：这个报价到底合不合理。">
+<link rel="canonical" href="https://gds-cb.github.io/cost-model/kb/seven-cost-blocks.html">
+<link rel="stylesheet" href="../assets/site.css">
+</head>
+<body>
+<header class="site-header"><div class="wrap"><a class="brand" href="../index.html">🚗 汽车成本工具箱<span>成本与供应链</span></a><nav class="site-nav"><a href="../index.html">首页</a><a href="../materials/index.html">材料价格库</a><a href="../kb/index.html" class="active">知识库</a><a href="../injection/index.html">注塑件工具</a><a href="../stamping/index.html">冲压件工具</a></nav></div></header>
+<main class="wrap">
+<div class="page-head"><p style="font-size:.8rem;color:#94a3b8;margin-bottom:6px;"><a href="index.html" style="color:#2563eb;text-decoration:none;">← 知识库</a></p><h1>一个汽车零件的成本，到底由哪七块构成</h1><p class="lead" style="font-size:.8rem;color:#94a3b8;">2026-03-01 · #成本基础 · #方法论</p></div><article class="prose"><h2>为什么需要一个框架</h2>
+<p>成本工程师最常被问的两个问题：</p>
+<ol><li><strong>「这个价合不合理？」</strong></li><li><strong>「怎么才能降下来？」</strong></li></ol>
+<p>这两个问题之所以难回答，是因为大部分人看成本的时候，看到的是一堆零散的科目：材料、工时、模具、运费、管理费……每家公司叫法还不一样，供应商给的报价单格式也千奇百怪。</p>
+<p>但如果你把视角拉高一层，会发现一件事：</p>
+<blockquote><p><strong>不管什么零件、什么工艺、什么行业，成本都是同样七块的组合。</strong></p></blockquote>
+<p>差别只在于——每一块<strong>用什么公式算、填什么参数</strong>。</p>
+<h2>七块成本</h2>
+<table><thead><tr><th>#</th><th>成本块</th><th>公式</th></tr></thead><tbody><tr><td>1</td><td><strong>材料费</strong></td><td>毛重 × 单价 − 废料回收 + 外购子件</td></tr><tr><td>2</td><td><strong>加工费</strong></td><td>Σ(工时 × 费率) 或 Σ(冲次 × 单次费率) 或 循环时间 × 费率 ÷ 模穴数</td></tr><tr><td>3</td><td><strong>工装摊销</strong></td><td>模具总价 × 供应商分摊比 ÷ 生命周期产量</td></tr><tr><td>4</td><td><strong>二次加工</strong></td><td>处理面积 × 单价 × 工艺系数 ÷ 良率</td></tr><tr><td>5</td><td><strong>连接装配</strong></td><td>Σ(焊点 / 螺栓 / 卡扣 数 × 单点费率)</td></tr><tr><td>6</td><td><strong>包装物流</strong></td><td>包装摊销 + 运费/件 + 仓储 + EDI</td></tr><tr><td>7</td><td><strong>期间费用</strong></td><td>(1~6) × 管理费率 + 利润 + 税金 + 账期资金占用</td></tr></tbody></table>
+<p>下面逐块说清楚，每一块<strong>最容易出错的地方在哪里</strong>。</p>
+<h3>1. 材料费</h3>
+<p>看起来最简单，实际上坑最多。</p>
+<ul><li><strong>毛重还是净重？</strong> 材料是按<strong>毛重</strong>（下料尺寸）采购的，不是按零件净重。用净重算材料费，会系统性低估。</li><li><strong>废料有没有冲减？</strong> 冲压件下料利用率常常只有 70~80%，那 20~30% 的废料是有残值的。不冲减，就等于白送。</li><li><strong>料把、流道算进去了吗？</strong> 注塑件每模都有料把，按模穴数摊到每个零件上。</li><li><strong>废品率乘在哪？</strong> 只乘材料，还是也乘工时？严格说，废品消耗的是<strong>全部投入</strong>，不只是材料。</li></ul>
+<h3>2. 加工费</h3>
+<p>三种计价方式，对应三类工艺：</p>
+<table><thead><tr><th>方式</th><th>适用</th><th>公式</th></tr></thead><tbody><tr><td><strong>循环制</strong></td><td>注塑、压铸</td><td>(机时费率 + 人工费率) ÷ (3600 ÷ 周期秒 × 模穴数)</td></tr><tr><td><strong>冲次制</strong></td><td>冲压</td><td>冲次 × (机时费率 ÷ (SPM × 60))</td></tr><tr><td><strong>工时制</strong></td><td>机加工、焊接、装配</td><td>单件工时 × 小时费率</td></tr></tbody></table>
+<p><strong>最容易错的一点</strong>：机时费率和人工费率是<strong>两个东西</strong>，很多报价单把它们混成&quot;加工费&quot;一个数，你就没法判断哪一部分虚高了。</p>
+<p><strong>第二容易错的</strong>：设备选型。同一道工序，用 400T 还是 630T，费率差 25%。设备选大了，成本虚高；选小了，做不出来。</p>
+<h3>3. 工装摊销</h3>
+<p><strong>模具费本身不难算，难的是「怎么摊」。</strong></p>
+<p>三个变量决定摊销金额：</p>
+<ul><li><strong>模具总价</strong>（多少）</li><li><strong>供应商分摊比例</strong>（谁出钱）</li><li><strong>生命周期产量</strong>（摊到多少件上）</li></ul>
+<blockquote><p>⚠️ 最常见的争议点：用<strong>年产量</strong>还是<strong>生命周期产量</strong>来摊？</p>
+<p>用年产量摊，模具费会显得很贵；用生命周期摊，又显得很便宜。 <strong>口径不统一，两个人的报价能差出一倍。</strong></p></blockquote>
+<p>还有一个隐蔽的坑：<strong>模具重量不等于模具价格</strong>。用「重量 × 元/kg」粗估是可以的，但要清楚这是粗估。</p>
+<h3>4. 二次加工</h3>
+<p>表面处理、热处理、去毛刺、浸渗……</p>
+<p>按<strong>面积</strong>计价，但要注意：</p>
+<ul><li>用<strong>投影面积</strong>还是<strong>展开面积/表面积</strong>？注塑件用投影面积会低估（实际表面积大得多）</li><li><strong>良率</strong>要放进去。电镀良率 90%，就意味着成本要除以 0.9</li><li><strong>前处理</strong>（除油、酸洗、磷化）常常是单独一道成本</li></ul>
+<h3>5. 连接装配</h3>
+<p>焊点、螺栓、卡扣、涂胶——按&quot;个数 × 单点费率&quot;。</p>
+<p>这块最容易被忽略的是<strong>数量放大</strong>：一个总成里某个子件用 2 个，那焊接工作量也是 2 倍。忘了乘，成本就少了。</p>
+<h3>6. 包装物流</h3>
+<ul><li><strong>包装摊销</strong>：一次性纸箱 vs 周转箱，差别很大</li><li><strong>空箱返回率</strong>：循环包装要算返程</li><li><strong>运输模式</strong>：零担按重量/体积重，直送按车次，Milk-run 按线路分摊</li><li><strong>交付方式</strong>：JIT 和排序上线，成本比普通批量交付高 5%~12%</li></ul>
+<blockquote><p>💡 一个反直觉的点：<strong>大型薄壁件</strong>（比如保险杠）常常是<strong>体积重</strong>大于实际重量。 只按重量算运费，会严重低估。</p></blockquote>
+<h3>7. 期间费用</h3>
+<p>管理费、利润、税金、<strong>以及账期资金占用</strong>。</p>
+<p>前三项是常规的，最后一项经常被漏掉——但它是<strong>供应商最痛的一块</strong>。</p>
+<p>具体怎么算，见另一篇：<a href="payment-terms-cost.html">《主机厂账期 90 天，供应商的真实成本是多少》</a>。</p>
+<h2>用一个真实结构跑一遍</h2>
+<p>拿一个注塑件举例（800×150×2.8mm 盒状件，PP+EPDM-T20）：</p>
+<table><thead><tr><th>成本块</th><th>金额（元/件）</th><th>占比</th></tr></thead><tbody><tr><td>材料费</td><td>2.13</td><td>19%</td></tr><tr><td>加工费</td><td>3.58</td><td>32%</td></tr><tr><td>模具分摊</td><td>3.11</td><td>28%</td></tr><tr><td>物流费</td><td>0.12</td><td>1%</td></tr><tr><td>管理费（12%）</td><td>1.07</td><td>10%</td></tr><tr><td>利润（10%）</td><td>1.00</td><td>9%</td></tr><tr><td><strong>完全成本</strong></td><td><strong>11.03</strong></td><td>100%</td></tr><tr><td><strong>含税报价（13%）</strong></td><td><strong>12.46</strong></td><td>113%</td></tr></tbody></table>
+<p><strong>看完这张表，你会发现两件事：</strong></p>
+<ol><li><strong>材料费只占 19%</strong> —— 很多人一谈降本就说&quot;换便宜材料&quot;，</li></ol>
+<p>但材料占比不到两成，换材料的空间其实有限。</p>
+<ol><li><strong>加工费 + 模具分摊占 60%</strong> —— 真正的大头在这里。</li></ol>
+<p><strong>降本该往哪使劲，一眼就看出来了。</strong></p>
+<h2>怎么用这个框架看报价</h2>
+<p>拿到任何一份供应商报价，按这七块对号入座：</p>
+<ul><li>哪几块<strong>没列</strong>？（漏项往往是水分所在）</li><li>哪一块<strong>明显异常</strong>？（比如管理费 25%、利润率 20%）</li><li><strong>参数填的是什么</strong>？（周期 60 秒还是 90 秒？模穴数 1 还是 2？）</li></ul>
+<p><strong>能把一份报价拆成这七块，你就有资格谈价了。</strong></p>
+<p>反过来，如果你自己报价，也应该按这七块报—— <strong>透明的报价单，比一个笼统的总价，更容易被接受，也更难被砍。</strong></p>
+<hr>
+<p><em>这一套七块结构，就是我们两个成本工具的内核：</em> <a href="../injection/index.html"><em>注塑件成本模型</em></a> <em>和</em> <a href="../stamping/index.html"><em>冲压件成本模型</em></a>。 <em>工具里的每一个数字，都能点开看到它属于哪一块、怎么算出来的。</em></p></article><div class="notice info" style="margin-top:32px;max-width:780px;">🔧 想直接算一算？<a href="../injection/index.html">注塑件成本模型</a> · <a href="../stamping/index.html">冲压件成本模型</a></div>
+</main>
+<footer class="site-footer"><div class="wrap"><p>汽车成本工具箱 · 汽车成本估算与供应链工具</p><p>全部计算在浏览器内完成，不依赖外部 CDN、不上传任何数据，可离线与企业内网使用</p><p style="margin-top:8px;">© 2025–2026 · <a href="../index.html">返回首页</a></p></div></footer>
+</body>
+</html>
