@@ -247,6 +247,85 @@ const CRAFT = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'craft-prices.j
     has(r.html, 'mailto:a@b.com', 'CTA 显示邮箱');
     notHas(r.html, 'data/site.json', '已配置时不显示「去哪里配」提示');
 }
+{
+    // 二维码渠道：路径必须按页面深度转成相对路径
+    const site = { memberCta: { wechatQr: 'assets/wechat-qr.png', wechatNote: '扫码加微信' } };
+    const r = B.buildCraft(CRAFT, site, {});
+    has(r.html, 'src="../assets/wechat-qr.png"', 'CTA 里二维码用相对路径（页面在子目录）');
+    has(r.html, '扫码加微信', 'CTA 显示扫码说明');
+    notHas(r.html, 'src="assets/wechat-qr.png"', '不能出现根相对路径（子页面会 404）');
+}
+
+/* ============================================================
+ * 7b. 交流社区
+ * ============================================================ */
+section('交流社区');
+{
+    const site = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'site.json'), 'utf8'));
+    const r = B.buildCommunity(site);
+    has(r.html, '交流社区', '页面标题');
+    has(r.html, 'src="../assets/wechat-qr.png"', '显示二维码（相对路径正确）');
+    has(r.html, '<ol class="rule-list">', '显示群规列表');
+    has(r.html, site.community.rules[0].slice(0, 6), '群规内容被渲染');
+    notHas(r.html, '<script>alert', '无注入内容');
+
+    ok(r.groupCount > 0, '列出了交流群', '实际 ' + r.groupCount + ' 个');
+
+    // 二维码图片必须真实存在
+    if (site.community.wechatQr) {
+        ok(fs.existsSync(path.join(ROOT, site.community.wechatQr)),
+            '二维码图片存在：' + site.community.wechatQr);
+    }
+    if (site.memberCta.wechatQr) {
+        ok(fs.existsSync(path.join(ROOT, site.memberCta.wechatQr)),
+            '会员 CTA 的二维码图片存在：' + site.memberCta.wechatQr);
+    }
+}
+
+/* ============================================================
+ * 7c. 会员价格维护台
+ * ============================================================ */
+section('价格维护台');
+{
+    const site = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'site.json'), 'utf8'));
+    const memberN = CRAFT.items.filter(i => i.visibility === 'member').length;
+
+    const html = B.buildAdmin(CRAFT, { 'SF-CED': 12.5 });
+    has(html, '/api/craft-prices', '接入了保存接口');
+    has(html, '/api/build-member', '接入了构建接口');
+    has(html, 'data-code="SF-CED"', '会员项渲染为输入框');
+    has(html, 'value="12.5"', '已有本地价格被回填');
+    has(html, 'data/site.json'.replace('site.json', 'craft-prices.local.json'),
+        '说明了数据写到哪个文件');
+
+    // 输入框数量必须等于会员项数量（不多不少）
+    const inputs = (html.match(/<input type="number"[^>]*data-code=/g) || []).length;
+    eq(inputs, memberN, '输入框数量 = 会员项数量（' + memberN + '）');
+
+    // 公开项不应有输入框
+    const pubCodes = CRAFT.items.filter(i => i.visibility === 'public').map(i => i.code);
+    const leaked = pubCodes.filter(c => html.indexOf('data-code="' + c + '"') >= 0);
+    eq(leaked.length, 0, '公开项没有输入框（只读）'
+        + (leaked.length ? '：' + leaked.join(', ') : ''));
+
+    // 维护台不能被搜索引擎收录
+    notHas(html, '<link rel="canonical"', '维护台不设 canonical');
+}
+{
+    // 端到端：构建必须产出 community/ 与 _admin/，且 _admin 不进 sitemap
+    const r = B.build({ member: true });
+    ok(fs.existsSync(path.join(ROOT, 'community', 'index.html')), 'community/index.html 已生成');
+    ok(fs.existsSync(path.join(ROOT, '_admin', 'index.html')), '_admin/index.html 已生成');
+    ok(fs.existsSync(path.join(ROOT, '_member', 'index.html')), '_member/index.html 已生成（会员版）');
+
+    const sm = fs.readFileSync(path.join(ROOT, 'sitemap.xml'), 'utf8');
+    notHas(sm, '_admin', 'sitemap 不含维护台（本地工具不该被索引）');
+    notHas(sm, '_member', 'sitemap 不含会员版');
+    has(sm, '/community/', 'sitemap 含交流社区');
+
+    // 清理构建产物，避免把测试生成的会员版留在仓库里
+    fs.rmSync(path.join(ROOT, '_member'), { recursive: true, force: true });
+}
 
 /* ============================================================
  * 8. 真实构建（端到端）

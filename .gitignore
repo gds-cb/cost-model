@@ -32,3 +32,4 @@ BandLab-Guitar-MIDI/
 # 会员区经验价格 —— 刻意不进公开仓库（这是核心资产）
 data/craft-prices.local.json
 _member/
+_admin/
